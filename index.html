@@ -37,6 +37,7 @@
       --button-secondary-text: #e2e8f0;
       --button-secondary-border: rgba(148, 163, 184, 0.4);
       --control-shadow: 0 2px 8px rgba(2, 6, 23, 0.25);
+      --version-color: #ffffff;
     }
 
     body[data-theme="dark"] {
@@ -65,6 +66,7 @@
       --button-secondary-border: rgba(88, 99, 126, 0.3);
       --control-shadow: 0 2px 8px rgba(46, 54, 80, 0.08);
       color-scheme: light;
+      --version-color: #000000;
     }
 
     main {
@@ -173,6 +175,14 @@
       border: 1px solid var(--button-secondary-border);
     }
 
+    button.download-example {
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-inline: 1rem;
+    }
+
     button.secondary:hover {
       background: rgba(148, 163, 184, 0.15);
     }
@@ -256,6 +266,18 @@
       margin-top: 3rem;
     }
 
+    .version-badge {
+      position: fixed;
+      bottom: 0.75rem;
+      right: 0.75rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--version-color);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
     .theme-toggle {
       align-self: flex-end;
     }
@@ -310,6 +332,7 @@
         </tbody>
       </table>
       <p>You can add additional columns for extra information, and reference them in the flashcard templates below using <code>{{ColumnName}}</code> placeholders.</p>
+      <button type="button" id="downloadExample" class="secondary download-example" aria-label="Download the example CSV">Download example CSV</button>
     </section>
 
     <section id="upload">
@@ -359,6 +382,8 @@
     </footer>
   </main>
 
+  <div class="version-badge" aria-label="Version">v1.0.0</div>
+
   <script>
     const themeToggleBtn = document.getElementById('themeToggle');
     const fileInput = document.getElementById('fileInput');
@@ -368,6 +393,7 @@
     const hintTemplate = document.getElementById('hintTemplate');
     const startButton = document.getElementById('startStudy');
     const previewContainer = document.getElementById('previewContainer');
+    const downloadExampleBtn = document.getElementById('downloadExample');
 
     const studySection = document.getElementById('study');
     const cardText = document.getElementById('cardText');
@@ -387,6 +413,23 @@
     const storedTheme = localStorage.getItem('flashcard-studio-theme');
     const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
     applyTheme(initialTheme);
+
+    downloadExampleBtn.addEventListener('click', () => {
+      const exampleCsv = [
+        'Term,Definition,Hint',
+        'Photosynthesis,"Process plants use to convert light into energy.","Chlorophyll, sunlight"',
+        'Mitochondria,"The powerhouse of the cell.",Organelle'
+      ].join('\n');
+      const blob = new Blob([exampleCsv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'flashcard-example.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
 
     themeToggleBtn.addEventListener('click', () => {
       const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
