@@ -36,6 +36,9 @@
       --button-secondary-bg: rgba(30, 41, 59, 0.85);
       --button-secondary-text: #e2e8f0;
       --button-secondary-border: rgba(148, 163, 184, 0.4);
+      --button-danger-bg: rgba(220, 38, 38, 0.12);
+      --button-danger-border: rgba(248, 113, 113, 0.35);
+      --button-danger-text: #f87171;
       --control-shadow: 0 2px 8px rgba(2, 6, 23, 0.25);
       --version-color: #ffffff;
     }
@@ -64,13 +67,16 @@
       --button-secondary-bg: #fff;
       --button-secondary-text: #3f4860;
       --button-secondary-border: rgba(88, 99, 126, 0.3);
+      --button-danger-bg: rgba(239, 68, 68, 0.12);
+      --button-danger-border: rgba(248, 113, 113, 0.55);
+      --button-danger-text: #dc2626;
       --control-shadow: 0 2px 8px rgba(46, 54, 80, 0.08);
       color-scheme: light;
       --version-color: #000000;
     }
 
     main {
-      max-width: 960px;
+      max-width: 1080px;
       margin: 0 auto;
       padding: 2.5rem 1.5rem 4rem;
     }
@@ -112,6 +118,10 @@
       margin-top: 0;
     }
 
+    h3 {
+      margin-top: 0;
+    }
+
     ul {
       padding-left: 1.25rem;
       line-height: 1.7;
@@ -124,6 +134,7 @@
     }
 
     input[type="file"],
+    input[type="text"],
     select,
     textarea,
     button {
@@ -134,12 +145,13 @@
       background-color: var(--input-bg);
       color: var(--input-text);
       box-shadow: var(--control-shadow);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease, color 0.3s ease;
       width: 100%;
       box-sizing: border-box;
     }
 
     input[type="file"],
+    input[type="text"],
     select,
     textarea {
       color: var(--input-text);
@@ -162,6 +174,7 @@
       color: var(--button-primary-text);
       font-weight: 600;
       letter-spacing: 0.02em;
+      width: auto;
     }
 
     button:hover {
@@ -175,16 +188,25 @@
       border: 1px solid var(--button-secondary-border);
     }
 
-    button.download-example {
-      width: auto;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding-inline: 1rem;
+    button.danger {
+      background: var(--button-danger-bg);
+      color: var(--button-danger-text);
+      border: 1px solid var(--button-danger-border);
     }
 
     button.secondary:hover {
       background: rgba(148, 163, 184, 0.15);
+    }
+
+    button.danger:hover {
+      background: rgba(220, 38, 38, 0.18);
+    }
+
+    button.download-example {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-inline: 1rem;
     }
 
     .flex-row {
@@ -195,6 +217,10 @@
 
     .flex-row > * {
       flex: 1 1 240px;
+    }
+
+    .section-header {
+      margin-bottom: 1.5rem;
     }
 
     .hidden {
@@ -221,6 +247,7 @@
       color: var(--hint-color);
       font-size: 0.95rem;
       margin-top: 1rem;
+      min-height: 1.5rem;
     }
 
     .actions {
@@ -228,35 +255,172 @@
       flex-wrap: wrap;
       gap: 1rem;
       margin-top: 1.5rem;
+      justify-content: center;
     }
 
-    .counter {
-      margin-top: 1rem;
-      text-align: center;
-      font-weight: 600;
+    .progress-meter {
+      margin-top: 1.75rem;
+    }
+
+    .progress-meter__label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
       color: var(--counter-color);
+      text-align: center;
     }
 
-    table.preview {
+    .progress-meter__track {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.25);
+      overflow: hidden;
+    }
+
+    .progress-meter__fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(120deg, rgba(63, 135, 255, 0.9), rgba(127, 92, 255, 0.9));
+      background-size: 200% 200%;
+      animation: shimmer 3s ease infinite;
+      transition: width 0.5s ease;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .set-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sets-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .set-card {
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      padding: 1.25rem;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    body[data-theme="light"] .set-card {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .set-card__header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .set-card__meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .set-card__actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .set-card__actions button {
+      flex: 1 1 140px;
+    }
+
+    .column-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.25);
+      margin: 0 0.5rem 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .column-chip button {
+      width: auto;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+    }
+
+    .column-editor,
+    .templates-editor,
+    .cards-editor {
+      margin-top: 1.5rem;
+    }
+
+    .cards-editor table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
       font-size: 0.95rem;
+      min-width: 480px;
     }
 
-    table.preview th,
-    table.preview td {
+    .cards-editor th,
+    .cards-editor td {
       border: 1px solid var(--table-border);
       padding: 0.5rem;
       text-align: left;
     }
 
-    table.preview th {
+    .cards-editor th {
       background: var(--table-header-bg);
     }
 
-    table.preview tbody tr {
+    .cards-editor tbody tr:nth-child(even) {
       background: var(--table-row-bg);
+    }
+
+    .cards-editor input {
+      width: 100%;
+    }
+
+    .cards-editor__table-wrapper {
+      overflow-x: auto;
+    }
+
+    .study-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .back-button {
+      width: auto;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
     }
 
     footer {
@@ -302,6 +466,10 @@
         display: flex;
         justify-content: flex-end;
       }
+
+      .set-card__actions button {
+        flex: 1 1 100%;
+      }
     }
   </style>
 </head>
@@ -315,65 +483,114 @@
       </div>
       <h1>Flashcard Studio</h1>
       <p class="subtitle">
-        Import spaced-repetition style decks from a CSV file, customise how each side is built, and study in your browser with nothing more than this single HTML page.
+        Build, import, and manage flashcard sets directly in your browser. Everything is stored locally in this single HTML file,
+        ready to study anytime.
       </p>
     </header>
 
     <section id="instructions">
-      <h2>1. Prepare your CSV</h2>
-      <p>Use UTF-8 encoded CSV with a header row. Each row represents one flashcard. Include at least two columns such as <strong>Front</strong> and <strong>Back</strong>. A minimal example:</p>
-      <table class="preview">
-        <thead>
-          <tr><th>Term</th><th>Definition</th><th>Hint</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Photosynthesis</td><td>Process plants use to convert light into energy.</td><td>Chlorophyll, sunlight</td></tr>
-          <tr><td>Mitochondria</td><td>The powerhouse of the cell.</td><td>Organelle</td></tr>
-        </tbody>
-      </table>
-      <p>You can add additional columns for extra information, and reference them in the flashcard templates below using <code>{{ColumnName}}</code> placeholders.</p>
-      <button type="button" id="downloadExample" class="secondary download-example" aria-label="Download the example CSV">Download example CSV</button>
+      <div class="section-header">
+        <h2>1. Get started</h2>
+        <p>Use the set manager below to create cards from scratch or import existing CSV decks. Everything stays on your device.</p>
+      </div>
+      <ul>
+        <li>Create a set with the visual creator, customise the fields you need, and add cards one by one.</li>
+        <li>Import CSV files to instantly turn spreadsheets into study-ready decks.</li>
+        <li>Edit sets at any time and switch between them instantly during study sessions.</li>
+        <li>Keyboard shortcuts during study: <strong>1</strong> reveals an answer or marks it as known, <strong>2</strong> marks "I don't know it".</li>
+      </ul>
     </section>
 
-    <section id="upload">
-      <h2>2. Upload and configure</h2>
-      <label for="fileInput">Choose your CSV file</label>
-      <input id="fileInput" type="file" accept=".csv,text/csv" />
-      <div id="config" class="hidden">
-        <div class="flex-row" aria-live="polite">
+    <section id="setManager">
+      <div class="section-header">
+        <h2>2. Manage your sets</h2>
+        <p>Build sets with the creator, import CSV decks, or edit the ones you've already made.</p>
+      </div>
+      <div class="set-controls">
+        <button id="createSetButton">Create a set</button>
+        <button id="importSetButton" class="secondary">Import from CSV</button>
+        <button id="downloadExample" class="secondary download-example">Download example CSV</button>
+        <input id="importSetInput" type="file" class="hidden" accept=".csv,text/csv" />
+      </div>
+      <div id="setsList" class="sets-list"></div>
+    </section>
+
+    <section id="setEditor" class="hidden" aria-live="polite">
+      <div class="section-header">
+        <h2 id="setEditorTitle">Create a set</h2>
+        <p>Use the creator to define the fields you want and craft the flashcards for this set. Your work is saved locally.</p>
+      </div>
+      <div class="flex-row">
+        <label>
+          Set name
+          <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
+        </label>
+      </div>
+      <div class="column-editor">
+        <h3>Fields</h3>
+        <p class="subtitle" style="font-size: 0.95rem; text-align: left;">These are the columns you can reference in your templates.</p>
+        <div id="columnList"></div>
+        <div class="flex-row">
+          <input id="newColumnInput" type="text" placeholder="Add a new field" />
+          <button id="addColumnButton" type="button" class="secondary">Add field</button>
+        </div>
+      </div>
+      <div class="templates-editor">
+        <h3>Templates</h3>
+        <p class="subtitle" style="font-size: 0.95rem; text-align: left;">Use <code>{{FieldName}}</code> to pull values from your cards. Front and back are required.</p>
+        <div class="flex-row">
           <label>
             Front template
-            <textarea id="frontTemplate" placeholder="e.g. {{Term}}"></textarea>
+            <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
           </label>
           <label>
             Back template
-            <textarea id="backTemplate" placeholder="e.g. {{Definition}}"></textarea>
+            <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
           </label>
         </div>
         <label>
-          Optional hint template (shown before revealing the answer)
-          <textarea id="hintTemplate" placeholder="e.g. {{Hint}}"></textarea>
+          Optional hint template
+          <textarea id="templateHint" placeholder="e.g. {{Hint}}"></textarea>
         </label>
-        <div>
-          <button id="startStudy">Start studying</button>
+      </div>
+      <div class="cards-editor">
+        <div class="study-header" style="margin-bottom: 1rem;">
+          <h3 style="margin: 0;">Cards</h3>
+          <button id="addCardButton" type="button" class="secondary">Add card</button>
         </div>
-        <div id="previewContainer"></div>
+        <div class="cards-editor__table-wrapper">
+          <table>
+            <thead id="cardsTableHead"></thead>
+            <tbody id="cardsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="saveSetButton" type="button">Save set</button>
+        <button id="cancelSetButton" type="button" class="secondary">Cancel</button>
       </div>
     </section>
 
     <section id="study" class="hidden" aria-live="polite">
-      <h2>3. Study session</h2>
+      <div class="study-header">
+        <h2 id="studySetTitle">Study session</h2>
+        <button id="backButton" class="secondary back-button" type="button">Back</button>
+      </div>
       <div class="card" id="cardText"></div>
       <div class="card__hint" id="cardHint"></div>
       <div class="actions">
-        <button id="showAnswer">Show answer</button>
-        <button id="knowButton" class="hidden">I know it</button>
-        <button id="dontKnowButton" class="hidden secondary">I don't know it</button>
+        <button id="showAnswer" type="button">1. Show answer</button>
+        <button id="knowButton" type="button" class="hidden">1. I know it</button>
+        <button id="dontKnowButton" type="button" class="hidden secondary">2. I don't know it</button>
       </div>
-      <div class="counter" id="progress"></div>
+      <div class="progress-meter">
+        <div class="progress-meter__label" id="progressText">learned this round: 0/0</div>
+        <div class="progress-meter__track">
+          <div class="progress-meter__fill" id="progressFill"></div>
+        </div>
+      </div>
       <div class="actions">
-        <button id="restartButton" class="hidden secondary">Study again</button>
-        <button id="mainMenuButton" class="hidden secondary">Back to main menu</button>
+        <button id="restartButton" type="button" class="hidden secondary">1. Study again</button>
       </div>
     </section>
 
@@ -382,37 +599,65 @@
     </footer>
   </main>
 
-  <div class="version-badge" aria-label="Version">v1.0.0</div>
+  <div class="version-badge" aria-label="Version">v1.1.0</div>
 
   <script>
     const themeToggleBtn = document.getElementById('themeToggle');
-    const fileInput = document.getElementById('fileInput');
-    const configSection = document.getElementById('config');
-    const frontTemplate = document.getElementById('frontTemplate');
-    const backTemplate = document.getElementById('backTemplate');
-    const hintTemplate = document.getElementById('hintTemplate');
-    const startButton = document.getElementById('startStudy');
-    const previewContainer = document.getElementById('previewContainer');
+    const instructionsSection = document.getElementById('instructions');
+    const setManagerSection = document.getElementById('setManager');
+    const setEditorSection = document.getElementById('setEditor');
+    const setEditorTitle = document.getElementById('setEditorTitle');
+    const setNameInput = document.getElementById('setNameInput');
+    const columnList = document.getElementById('columnList');
+    const newColumnInput = document.getElementById('newColumnInput');
+    const addColumnBtn = document.getElementById('addColumnButton');
+    const templateFront = document.getElementById('templateFront');
+    const templateBack = document.getElementById('templateBack');
+    const templateHint = document.getElementById('templateHint');
+    const cardsTableHead = document.getElementById('cardsTableHead');
+    const cardsTableBody = document.getElementById('cardsTableBody');
+    const addCardBtn = document.getElementById('addCardButton');
+    const saveSetBtn = document.getElementById('saveSetButton');
+    const cancelSetBtn = document.getElementById('cancelSetButton');
+    const createSetBtn = document.getElementById('createSetButton');
+    const importSetBtn = document.getElementById('importSetButton');
+    const importSetInput = document.getElementById('importSetInput');
+    const setsList = document.getElementById('setsList');
     const downloadExampleBtn = document.getElementById('downloadExample');
 
     const studySection = document.getElementById('study');
+    const studySetTitle = document.getElementById('studySetTitle');
+    const backButton = document.getElementById('backButton');
     const cardText = document.getElementById('cardText');
     const cardHint = document.getElementById('cardHint');
     const showAnswerBtn = document.getElementById('showAnswer');
     const knowBtn = document.getElementById('knowButton');
     const dontKnowBtn = document.getElementById('dontKnowButton');
-    const progressText = document.getElementById('progress');
+    const progressLabel = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
     const restartBtn = document.getElementById('restartButton');
-    const mainMenuBtn = document.getElementById('mainMenuButton');
 
-    let deck = [];
+    const storageKey = 'flashcardStudioSets';
+
+    let sets = [];
+    let editorState = null;
+    let editorMode = 'create';
+
+    let activeSetId = null;
+    let activeTemplates = { front: '', back: '', hint: '' };
     let originalDeck = [];
+    let deck = [];
     let currentCard = null;
-    let showingAnswer = false;
 
     const storedTheme = localStorage.getItem('flashcard-studio-theme');
     const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
     applyTheme(initialTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+      applyTheme(nextTheme);
+      localStorage.setItem('flashcard-studio-theme', nextTheme);
+    });
 
     downloadExampleBtn.addEventListener('click', () => {
       const exampleCsv = [
@@ -431,14 +676,17 @@
       URL.revokeObjectURL(url);
     });
 
-    themeToggleBtn.addEventListener('click', () => {
-      const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
-      applyTheme(nextTheme);
-      localStorage.setItem('flashcard-studio-theme', nextTheme);
+    createSetBtn.addEventListener('click', () => {
+      openSetEditor('create');
     });
 
-    fileInput.addEventListener('change', event => {
+    importSetBtn.addEventListener('click', () => {
+      importSetInput.click();
+    });
+
+    importSetInput.addEventListener('change', event => {
       const file = event.target.files?.[0];
+      importSetInput.value = '';
       if (!file) {
         return;
       }
@@ -453,98 +701,562 @@
           if (!records.length) {
             throw new Error('The CSV file is empty.');
           }
-          initializeConfig(records);
+          const columns = Object.keys(records[0].data);
+          const importedSet = {
+            id: generateId(),
+            name: file.name.replace(/\.[^.]+$/, '') || 'Imported set',
+            columns,
+            cards: records.map(record => ({ id: record.id || generateCardId(), data: { ...record.data } })),
+            templates: {
+              front: columns[0] ? `{{${columns[0]}}}` : '',
+              back: columns[1] ? `{{${columns[1]}}}` : '',
+              hint: columns[2] ? `{{${columns[2]}}}` : ''
+            }
+          };
+          openSetEditor('create', importedSet);
         } catch (error) {
           alert(error.message || String(error));
-          resetConfig();
         }
       };
       reader.onerror = () => {
         alert('Could not read the file. Please try again.');
-        resetConfig();
       };
       reader.readAsText(file, 'utf-8');
     });
 
-    startButton.addEventListener('click', () => {
-      if (!originalDeck.length) {
-        alert('Upload a CSV file first.');
+    setsList.addEventListener('click', event => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const action = button.dataset.action;
+      const setId = button.dataset.id;
+      if (!setId) return;
+      if (action === 'study') {
+        startStudyWithSet(setId);
+      } else if (action === 'edit') {
+        const set = sets.find(s => s.id === setId);
+        if (set) {
+          openSetEditor('edit', set);
+        }
+      } else if (action === 'delete') {
+        const set = sets.find(s => s.id === setId);
+        if (!set) return;
+        if (confirm(`Delete "${set.name}"? This cannot be undone.`)) {
+          sets = sets.filter(s => s.id !== setId);
+          saveSets();
+          renderSetsList();
+        }
+      }
+    });
+
+    addColumnBtn.addEventListener('click', () => {
+      if (!editorState) return;
+      const value = newColumnInput.value.trim();
+      if (!value) return;
+      if (editorState.columns.includes(value)) {
+        alert('That field already exists.');
         return;
       }
-      const front = frontTemplate.value.trim();
-      const back = backTemplate.value.trim();
+      editorState.columns.push(value);
+      editorState.cards.forEach(card => {
+        card.data[value] = card.data[value] ?? '';
+      });
+      newColumnInput.value = '';
+      renderColumnList();
+      renderCardsTable();
+    });
+
+    newColumnInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addColumnBtn.click();
+      }
+    });
+
+    columnList.addEventListener('click', event => {
+      const button = event.target.closest('button[data-remove-column]');
+      if (!button || !editorState) return;
+      const encodedColumn = button.dataset.removeColumn;
+      if (!encodedColumn) return;
+      const column = decodeFromDataset(encodedColumn);
+      if (editorState.columns.length === 1) {
+        alert('Keep at least one field.');
+        return;
+      }
+      editorState.columns = editorState.columns.filter(col => col !== column);
+      editorState.cards.forEach(card => {
+        delete card.data[column];
+      });
+      renderColumnList();
+      renderCardsTable();
+    });
+
+    cardsTableBody.addEventListener('input', event => {
+      if (!editorState) return;
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      const cardId = input.dataset.cardId;
+      const encodedColumn = input.dataset.column;
+      if (!cardId || !encodedColumn) return;
+      const column = decodeFromDataset(encodedColumn);
+      const card = editorState.cards.find(c => c.id === cardId);
+      if (!card) return;
+      card.data[column] = input.value;
+    });
+
+    cardsTableBody.addEventListener('click', event => {
+      if (!editorState) return;
+      const button = event.target.closest('button[data-remove-card]');
+      if (!button) return;
+      const cardId = button.dataset.removeCard;
+      if (!cardId) return;
+      if (editorState.cards.length === 1) {
+        alert('Keep at least one card.');
+        return;
+      }
+      editorState.cards = editorState.cards.filter(card => card.id !== cardId);
+      renderCardsTable();
+    });
+
+    addCardBtn.addEventListener('click', () => {
+      if (!editorState) return;
+      editorState.cards.push(createEmptyCard(editorState.columns));
+      renderCardsTable();
+    });
+
+    setNameInput.addEventListener('input', () => {
+      if (!editorState) return;
+      editorState.name = setNameInput.value;
+    });
+
+    templateFront.addEventListener('input', () => {
+      if (!editorState) return;
+      editorState.templates.front = templateFront.value;
+    });
+
+    templateBack.addEventListener('input', () => {
+      if (!editorState) return;
+      editorState.templates.back = templateBack.value;
+    });
+
+    templateHint.addEventListener('input', () => {
+      if (!editorState) return;
+      editorState.templates.hint = templateHint.value;
+    });
+
+    cancelSetBtn.addEventListener('click', () => {
+      closeSetEditor();
+    });
+
+    saveSetBtn.addEventListener('click', () => {
+      if (!editorState) return;
+      const trimmedName = (editorState.name || '').trim();
+      if (!trimmedName) {
+        alert('Give your set a name.');
+        setNameInput.focus();
+        return;
+      }
+      const front = (editorState.templates.front || '').trim();
+      const back = (editorState.templates.back || '').trim();
       if (!front || !back) {
-        alert('Please provide both front and back templates.');
+        alert('Front and back templates are required.');
         return;
       }
-      deck = originalDeck.map(card => ({ ...card }));
-      showingAnswer = false;
-      prepareNextCard();
-      document.getElementById('upload').classList.add('hidden');
-      studySection.classList.remove('hidden');
-      restartBtn.classList.add('hidden');
-      mainMenuBtn.classList.add('hidden');
-      knowBtn.classList.add('hidden');
-      dontKnowBtn.classList.add('hidden');
-      showAnswerBtn.classList.remove('hidden');
+      const cleanedCards = editorState.cards.map(card => {
+        const data = {};
+        editorState.columns.forEach(column => {
+          data[column] = (card.data[column] || '').trim();
+        });
+        return { id: card.id || generateCardId(), data };
+      });
+      const nonEmptyCards = cleanedCards.filter(card => {
+        return editorState.columns.some(column => card.data[column].length > 0);
+      });
+      if (!nonEmptyCards.length) {
+        alert('Add at least one card with some content.');
+        return;
+      }
+      const setToSave = {
+        id: editorState.id,
+        name: trimmedName,
+        columns: [...editorState.columns],
+        cards: nonEmptyCards,
+        templates: {
+          front,
+          back,
+          hint: (editorState.templates.hint || '').trim()
+        }
+      };
+      if (editorMode === 'create') {
+        sets.push(setToSave);
+      } else {
+        sets = sets.map(set => (set.id === setToSave.id ? setToSave : set));
+      }
+      saveSets();
+      renderSetsList();
+      closeSetEditor();
+    });
+
+    backButton.addEventListener('click', () => {
+      exitStudy();
     });
 
     showAnswerBtn.addEventListener('click', () => {
       if (!currentCard) return;
-      showingAnswer = true;
-      cardText.textContent = renderTemplate(backTemplate.value, currentCard.data);
-      const hint = renderTemplate(hintTemplate.value, currentCard.data).trim();
+      cardText.textContent = renderTemplate(activeTemplates.back, currentCard.data);
+      const hint = renderTemplate(activeTemplates.hint, currentCard.data).trim();
       cardHint.textContent = hint ? `Hint: ${hint}` : '';
       showAnswerBtn.classList.add('hidden');
       knowBtn.classList.remove('hidden');
       dontKnowBtn.classList.remove('hidden');
-      updateProgress();
     });
 
     knowBtn.addEventListener('click', () => {
       if (!currentCard) return;
       deck.shift();
-      proceedAfterAnswer();
+      prepareNextCard();
     });
 
     dontKnowBtn.addEventListener('click', () => {
       if (!currentCard) return;
-      deck.push(deck.shift());
-      proceedAfterAnswer();
+      const firstCard = deck.shift();
+      if (firstCard) {
+        deck.push(firstCard);
+      }
+      prepareNextCard();
     });
 
     restartBtn.addEventListener('click', () => {
-      deck = originalDeck.map(card => ({ ...card }));
-      showingAnswer = false;
+      resetDeck();
       prepareNextCard();
       restartBtn.classList.add('hidden');
-      mainMenuBtn.classList.add('hidden');
+      showAnswerBtn.classList.remove('hidden');
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target.isContentEditable) {
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+      if (studySection.classList.contains('hidden')) {
+        return;
+      }
+      if (event.key === '1') {
+        event.preventDefault();
+        if (!showAnswerBtn.classList.contains('hidden')) {
+          showAnswerBtn.click();
+        } else if (!knowBtn.classList.contains('hidden')) {
+          knowBtn.click();
+        } else if (!restartBtn.classList.contains('hidden')) {
+          restartBtn.click();
+        }
+      } else if (event.key === '2') {
+        event.preventDefault();
+        if (!dontKnowBtn.classList.contains('hidden')) {
+          dontKnowBtn.click();
+        }
+      }
+    });
+
+    loadSetsFromStorage();
+    renderSetsList();
+
+    function loadSetsFromStorage() {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        sets = raw ? JSON.parse(raw) : [];
+      } catch (error) {
+        console.warn('Could not load saved sets', error);
+        sets = [];
+      }
+      if (!Array.isArray(sets)) {
+        sets = [];
+      }
+      if (!sets.length) {
+        const starterSet = {
+          id: generateId(),
+          name: 'Starter deck',
+          columns: ['Term', 'Definition', 'Hint'],
+          cards: [
+            {
+              id: generateCardId(),
+              data: {
+                Term: 'Photosynthesis',
+                Definition: 'Process plants use to convert light into energy.',
+                Hint: 'Chlorophyll, sunlight'
+              }
+            },
+            {
+              id: generateCardId(),
+              data: {
+                Term: 'Mitochondria',
+                Definition: 'The powerhouse of the cell.',
+                Hint: 'Organelle'
+              }
+            }
+          ],
+          templates: {
+            front: '{{Term}}',
+            back: '{{Definition}}',
+            hint: '{{Hint}}'
+          }
+        };
+        sets.push(starterSet);
+        saveSets();
+      }
+    }
+
+    function saveSets() {
+      localStorage.setItem(storageKey, JSON.stringify(sets));
+    }
+
+    function renderSetsList() {
+      if (!sets.length) {
+        setsList.innerHTML = '<div class="empty-state">No sets yet. Create one or import a CSV to get started.</div>';
+        return;
+      }
+      setsList.innerHTML = sets.map(set => {
+        const cardCount = set.cards.length;
+        const cardLabel = cardCount === 1 ? 'card' : 'cards';
+        return `
+          <div class="set-card">
+            <div class="set-card__header">
+              <h3>${escapeHtml(set.name)}</h3>
+              <div class="set-card__meta">${cardCount} ${cardLabel} · ${escapeHtml(set.columns.join(', '))}</div>
+            </div>
+            <div class="set-card__actions">
+              <button data-action="study" data-id="${set.id}">Study</button>
+              <button data-action="edit" data-id="${set.id}" class="secondary">Edit</button>
+              <button data-action="delete" data-id="${set.id}" class="secondary danger">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openSetEditor(mode, baseSet) {
+      editorMode = mode;
+      const defaultColumns = ['Front', 'Back', 'Hint'];
+      const source = baseSet || null;
+      const columns = source?.columns?.length ? [...source.columns] : [...defaultColumns];
+      editorState = {
+        id: source?.id || generateId(),
+        name: source?.name || '',
+        columns,
+        cards: (source?.cards && source.cards.length ? source.cards : [createEmptyCard(columns)])
+          .map(card => ({ id: card.id || generateCardId(), data: { ...card.data } })),
+        templates: {
+          front: source?.templates?.front || (columns[0] ? `{{${columns[0]}}}` : ''),
+          back: source?.templates?.back || (columns[1] ? `{{${columns[1]}}}` : ''),
+          hint: source?.templates?.hint || (columns[2] ? `{{${columns[2]}}}` : '')
+        }
+      };
+      setNameInput.value = editorState.name;
+      templateFront.value = editorState.templates.front;
+      templateBack.value = editorState.templates.back;
+      templateHint.value = editorState.templates.hint;
+      renderColumnList();
+      renderCardsTable();
+      setEditorTitle.textContent = mode === 'edit' ? 'Edit set' : 'Create a set';
+      instructionsSection.classList.add('hidden');
+      setManagerSection.classList.add('hidden');
+      studySection.classList.add('hidden');
+      setEditorSection.classList.remove('hidden');
+      setNameInput.focus();
+    }
+
+    function closeSetEditor() {
+      editorState = null;
+      setEditorSection.classList.add('hidden');
+      studySection.classList.add('hidden');
+      instructionsSection.classList.remove('hidden');
+      setManagerSection.classList.remove('hidden');
+    }
+
+    function renderColumnList() {
+      if (!editorState) return;
+      if (!editorState.columns.length) {
+        columnList.innerHTML = '<div class="empty-state">No fields yet.</div>';
+        return;
+      }
+      columnList.innerHTML = editorState.columns.map(column => {
+        const encoded = encodeForDataset(column);
+        return `
+          <span class="column-chip">
+            ${escapeHtml(column)}
+            <button type="button" class="secondary" data-remove-column="${encoded}">&times;</button>
+          </span>
+        `;
+      }).join('');
+    }
+
+    function renderCardsTable() {
+      if (!editorState) return;
+      if (!editorState.columns.length) {
+        cardsTableHead.innerHTML = '';
+        cardsTableBody.innerHTML = '';
+        return;
+      }
+      const headerCells = editorState.columns.map(column => `<th>${escapeHtml(column)}</th>`).join('');
+      cardsTableHead.innerHTML = `<tr>${headerCells}<th>Actions</th></tr>`;
+      if (!editorState.cards.length) {
+        cardsTableBody.innerHTML = `<tr><td colspan="${editorState.columns.length + 1}" class="empty-state">No cards yet. Add one above.</td></tr>`;
+        return;
+      }
+      cardsTableBody.innerHTML = editorState.cards.map(card => {
+        const inputs = editorState.columns.map(column => {
+          const encodedColumn = encodeForDataset(column);
+          const value = card.data[column] ?? '';
+          return `<td><input data-card-id="${card.id}" data-column="${encodedColumn}" value="${escapeHtml(value)}" /></td>`;
+        }).join('');
+        return `
+          <tr data-card-id="${card.id}">
+            ${inputs}
+            <td><button type="button" class="secondary danger" data-remove-card="${card.id}">Remove</button></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function createEmptyCard(columns) {
+      const data = {};
+      columns.forEach(column => {
+        data[column] = '';
+      });
+      return { id: generateCardId(), data };
+    }
+
+    function startStudyWithSet(setId) {
+      const set = sets.find(s => s.id === setId);
+      if (!set) {
+        alert('Set not found.');
+        return;
+      }
+      if (!set.cards.length) {
+        alert('This set has no cards yet.');
+        return;
+      }
+      if (!set.templates?.front || !set.templates?.back) {
+        alert('Add front and back templates before studying this set.');
+        return;
+      }
+      activeSetId = setId;
+      activeTemplates = {
+        front: set.templates.front || '',
+        back: set.templates.back || '',
+        hint: set.templates.hint || ''
+      };
+      studySetTitle.textContent = `Study session · ${set.name}`;
+      originalDeck = set.cards.map(card => ({ id: card.id, data: { ...card.data } }));
+      resetDeck();
+      prepareNextCard();
+      instructionsSection.classList.add('hidden');
+      setManagerSection.classList.add('hidden');
+      setEditorSection.classList.add('hidden');
+      studySection.classList.remove('hidden');
+    }
+
+    function resetDeck() {
+      deck = originalDeck.map(card => ({ id: card.id, data: { ...card.data } }));
+      currentCard = null;
+      cardHint.textContent = '';
       showAnswerBtn.classList.remove('hidden');
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
-    });
+      restartBtn.classList.add('hidden');
+      updateProgress();
+    }
 
-    mainMenuBtn.addEventListener('click', () => {
-      studySection.classList.add('hidden');
-      document.getElementById('upload').classList.remove('hidden');
+    function prepareNextCard() {
+      updateProgress();
+      if (!deck.length) {
+        cardText.textContent = 'Great job! You have completed this set for now.';
+        cardHint.textContent = '';
+        showAnswerBtn.classList.add('hidden');
+        knowBtn.classList.add('hidden');
+        dontKnowBtn.classList.add('hidden');
+        restartBtn.classList.remove('hidden');
+        currentCard = null;
+        return;
+      }
+      currentCard = deck[0];
+      cardText.textContent = renderTemplate(activeTemplates.front, currentCard.data);
+      cardHint.textContent = '';
+      showAnswerBtn.classList.remove('hidden');
+      knowBtn.classList.add('hidden');
+      dontKnowBtn.classList.add('hidden');
+    }
+
+    function updateProgress() {
+      const total = originalDeck.length;
+      if (!total) {
+        progressLabel.textContent = 'learned this round: 0/0';
+        progressFill.style.width = '0%';
+        return;
+      }
+      const learned = total - deck.length;
+      progressLabel.textContent = `learned this round: ${learned}/${total}`;
+      const percentage = Math.min(100, Math.max(0, (learned / total) * 100));
+      progressFill.style.width = `${percentage}%`;
+    }
+
+    function exitStudy() {
       resetStudyState();
-    });
+      studySection.classList.add('hidden');
+      setEditorSection.classList.add('hidden');
+      instructionsSection.classList.remove('hidden');
+      setManagerSection.classList.remove('hidden');
+    }
+
+    function resetStudyState() {
+      activeSetId = null;
+      activeTemplates = { front: '', back: '', hint: '' };
+      deck = [];
+      originalDeck = [];
+      currentCard = null;
+      cardText.textContent = '';
+      cardHint.textContent = '';
+      progressLabel.textContent = 'learned this round: 0/0';
+      progressFill.style.width = '0%';
+      showAnswerBtn.classList.remove('hidden');
+      knowBtn.classList.add('hidden');
+      dontKnowBtn.classList.add('hidden');
+      restartBtn.classList.add('hidden');
+    }
+
+    function renderTemplate(template, data) {
+      return template.replace(/{{\s*([^{}\s]+)\s*}}/g, (match, key) => {
+        return data[key] !== undefined ? data[key] : '';
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function encodeForDataset(value) {
+      return encodeURIComponent(value);
+    }
+
+    function decodeFromDataset(value) {
+      try {
+        return decodeURIComponent(value);
+      } catch (error) {
+        return value;
+      }
+    }
 
     function parseCsv(text) {
       const rows = [];
       let current = '';
       let inQuotes = false;
       let row = [];
-
-      function endCell() {
-        row.push(current);
-        current = '';
-      }
-
-      function endRow() {
-        rows.push(row);
-        row = [];
-      }
 
       for (let i = 0; i < text.length; i++) {
         const char = text[i];
@@ -557,25 +1269,29 @@
             inQuotes = !inQuotes;
           }
         } else if (char === ',' && !inQuotes) {
-          endCell();
-        } else if ((char === '\n' || char === '\r') && !inQuotes) {
-          if (char === '\r' && next === '\n') {
-            i++;
-          }
-          endCell();
-          endRow();
+          row.push(current);
+          current = '';
+        } else if (char === '\n' && !inQuotes) {
+          row.push(current);
+          rows.push(row);
+          row = [];
+          current = '';
         } else {
           current += char;
         }
       }
+      row.push(current);
+      rows.push(row);
 
-      endCell();
-      if (row.length) {
-        endRow();
+      if (!rows.length) {
+        return [];
       }
 
-      if (!rows.length) return [];
       const headers = rows[0].map(header => header.trim());
+      if (!headers.length) {
+        throw new Error('The CSV file must have a header row.');
+      }
+
       return rows.slice(1)
         .filter(r => r.some(cell => cell.trim().length))
         .map((rowCells, index) => {
@@ -583,112 +1299,16 @@
           headers.forEach((header, idx) => {
             data[header] = rowCells[idx] !== undefined ? rowCells[idx].trim() : '';
           });
-          return { id: index + 1, data };
+          return { id: generateCardId(), data };
         });
     }
 
-    function initializeConfig(records) {
-      originalDeck = records;
-      configSection.classList.remove('hidden');
-      const columns = Object.keys(records[0].data);
-      if (!frontTemplate.value) {
-        frontTemplate.value = `{{${columns[0] || ''}}}`;
-      }
-      if (!backTemplate.value && columns[1]) {
-        backTemplate.value = `{{${columns[1]}}}`;
-      }
-      renderPreview(records);
+    function generateId() {
+      return `set-${Math.random().toString(36).slice(2, 10)}`;
     }
 
-    function resetConfig() {
-      configSection.classList.add('hidden');
-      previewContainer.innerHTML = '';
-      originalDeck = [];
-      frontTemplate.value = '';
-      backTemplate.value = '';
-      hintTemplate.value = '';
-    }
-
-    function renderPreview(records) {
-      const columns = Object.keys(records[0].data);
-      const headerHtml = columns.map(col => `<th>${escapeHtml(col)}</th>`).join('');
-      const bodyHtml = records.slice(0, 5).map(record => {
-        const cells = columns.map(col => `<td>${escapeHtml(record.data[col] || '')}</td>`).join('');
-        return `<tr>${cells}</tr>`;
-      }).join('');
-      previewContainer.innerHTML = `
-        <h3>Preview (${records.length} cards)</h3>
-        <table class="preview">
-          <thead><tr>${headerHtml}</tr></thead>
-          <tbody>${bodyHtml}</tbody>
-        </table>
-        <p>Use <code>{{ColumnName}}</code> to pull values into the templates above.</p>
-      `;
-    }
-
-    function prepareNextCard() {
-      if (!deck.length) {
-        cardText.textContent = 'Great job! You have completed all cards in this cycle.';
-        cardHint.textContent = '';
-        progressText.textContent = '';
-        showAnswerBtn.classList.add('hidden');
-        knowBtn.classList.add('hidden');
-        dontKnowBtn.classList.add('hidden');
-        restartBtn.classList.remove('hidden');
-        mainMenuBtn.classList.remove('hidden');
-        currentCard = null;
-        return;
-      }
-      currentCard = deck[0];
-      showingAnswer = false;
-      cardText.textContent = renderTemplate(frontTemplate.value, currentCard.data);
-      const hint = renderTemplate(hintTemplate.value, currentCard.data).trim();
-      cardHint.textContent = hint ? `Hint: ${hint}` : '';
-      showAnswerBtn.classList.remove('hidden');
-      knowBtn.classList.add('hidden');
-      dontKnowBtn.classList.add('hidden');
-      updateProgress();
-    }
-
-    function proceedAfterAnswer() {
-      showingAnswer = false;
-      prepareNextCard();
-    }
-
-    function updateProgress() {
-      const total = originalDeck.length;
-      const remaining = deck.length;
-      const queueRemaining = showingAnswer ? Math.max(remaining - 1, 0) : remaining;
-      const learned = total - queueRemaining;
-      progressText.textContent = `Remaining: ${queueRemaining} · Learned this round: ${learned}`;
-    }
-
-    function renderTemplate(template, data) {
-      return template.replace(/{{\s*([^{}\s]+)\s*}}/g, (match, key) => {
-        return data[key] !== undefined ? data[key] : '';
-      });
-    }
-
-    function escapeHtml(value) {
-      return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function resetStudyState() {
-      deck = [];
-      currentCard = null;
-      cardText.textContent = '';
-      cardHint.textContent = '';
-      progressText.textContent = '';
-      showAnswerBtn.classList.remove('hidden');
-      knowBtn.classList.add('hidden');
-      dontKnowBtn.classList.add('hidden');
-      restartBtn.classList.add('hidden');
-      mainMenuBtn.classList.add('hidden');
+    function generateCardId() {
+      return `card-${Math.random().toString(36).slice(2, 10)}`;
     }
 
     function applyTheme(theme) {
