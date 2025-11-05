@@ -613,6 +613,7 @@
       </div>
       <div class="actions">
         <button id="restartButton" type="button" class="hidden secondary">1. Study again</button>
+        <button id="returnButton" type="button" class="hidden secondary back-button">2. Back</button>
       </div>
     </section>
 
@@ -622,7 +623,7 @@
   </main>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.1.1</div>
+  <div class="version-badge" aria-label="Version">v1.1.2</div>
 
   <script>
     const themeToggleBtn = document.getElementById('themeToggle');
@@ -659,6 +660,7 @@
     const progressLabel = document.getElementById('progressText');
     const progressFill = document.getElementById('progressFill');
     const restartBtn = document.getElementById('restartButton');
+    const returnBtn = document.getElementById('returnButton');
     const confettiContainer = document.getElementById('confettiContainer');
 
     const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
@@ -956,6 +958,11 @@
       prepareNextCard();
       restartBtn.classList.add('hidden');
       showAnswerBtn.classList.remove('hidden');
+      returnBtn.classList.add('hidden');
+    });
+
+    returnBtn.addEventListener('click', () => {
+      exitStudy();
     });
 
     document.addEventListener('keydown', event => {
@@ -981,6 +988,8 @@
         event.preventDefault();
         if (!dontKnowBtn.classList.contains('hidden')) {
           dontKnowBtn.click();
+        } else if (!returnBtn.classList.contains('hidden')) {
+          returnBtn.click();
         }
       }
     });
@@ -1191,6 +1200,7 @@
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
       restartBtn.classList.add('hidden');
+      returnBtn.classList.add('hidden');
       clearConfetti();
       updateProgress();
     }
@@ -1204,6 +1214,7 @@
         knowBtn.classList.add('hidden');
         dontKnowBtn.classList.add('hidden');
         restartBtn.classList.remove('hidden');
+        returnBtn.classList.remove('hidden');
         currentCard = null;
         triggerConfetti();
         return;
@@ -1214,6 +1225,7 @@
       showAnswerBtn.classList.remove('hidden');
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
+      returnBtn.classList.add('hidden');
       clearConfetti();
     }
 
@@ -1252,6 +1264,7 @@
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
       restartBtn.classList.add('hidden');
+      returnBtn.classList.add('hidden');
       clearConfetti();
     }
 
