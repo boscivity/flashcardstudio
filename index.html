@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcard Studio</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f8fb;
+      color: #1f2430;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(145deg, rgba(79, 105, 231, 0.1), rgba(255, 255, 255, 0.8));
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.25rem, 5vw, 3rem);
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      margin: 0 auto;
+      max-width: 640px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #465063;
+    }
+
+    section {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(46, 54, 80, 0.08);
+      padding: 2rem;
+      margin-bottom: 1.75rem;
+      backdrop-filter: blur(8px);
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 0;
+    }
+
+    ul {
+      padding-left: 1.25rem;
+      line-height: 1.7;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    input[type="file"],
+    select,
+    textarea,
+    button {
+      font: inherit;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(88, 99, 126, 0.3);
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(46, 54, 80, 0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(120deg, #3f87ff, #7f5cff);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 25px rgba(63, 135, 255, 0.2);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #3f4860;
+      border: 1px solid rgba(88, 99, 126, 0.3);
+    }
+
+    button.secondary:hover {
+      background: #eff3ff;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .flex-row > * {
+      flex: 1 1 240px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .card {
+      text-align: center;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      padding: 2.5rem 2rem;
+      border-radius: 20px;
+      border: 2px solid rgba(63, 135, 255, 0.25);
+      background: #fff;
+      box-shadow: 0 18px 35px rgba(46, 54, 80, 0.08);
+      min-height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .card__hint {
+      color: #4f5d78;
+      font-size: 0.95rem;
+      margin-top: 1rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .counter {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: 600;
+      color: #465063;
+    }
+
+    table.preview {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+
+    table.preview th,
+    table.preview td {
+      border: 1px solid rgba(88, 99, 126, 0.2);
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    footer {
+      text-align: center;
+      color: #4f5d78;
+      font-size: 0.85rem;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 600px) {
+      section {
+        padding: 1.5rem;
+      }
+
+      .card {
+        padding: 2rem 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Flashcard Studio</h1>
+      <p class="subtitle">
+        Import spaced-repetition style decks from a CSV file, customise how each side is built, and study in your browser with nothing more than this single HTML page.
+      </p>
+    </header>
+
+    <section id="instructions">
+      <h2>1. Prepare your CSV</h2>
+      <p>Use UTF-8 encoded CSV with a header row. Each row represents one flashcard. Include at least two columns such as <strong>Front</strong> and <strong>Back</strong>. A minimal example:</p>
+      <table class="preview">
+        <thead>
+          <tr><th>Term</th><th>Definition</th><th>Hint</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Photosynthesis</td><td>Process plants use to convert light into energy.</td><td>Chlorophyll, sunlight</td></tr>
+          <tr><td>Mitochondria</td><td>The powerhouse of the cell.</td><td>Organelle</td></tr>
+        </tbody>
+      </table>
+      <p>You can add additional columns for extra information, and reference them in the flashcard templates below using <code>{{ColumnName}}</code> placeholders.</p>
+    </section>
+
+    <section id="upload">
+      <h2>2. Upload and configure</h2>
+      <label for="fileInput">Choose your CSV file</label>
+      <input id="fileInput" type="file" accept=".csv,text/csv" />
+      <div id="config" class="hidden">
+        <div class="flex-row" aria-live="polite">
+          <label>
+            Front template
+            <textarea id="frontTemplate" placeholder="e.g. {{Term}}"></textarea>
+          </label>
+          <label>
+            Back template
+            <textarea id="backTemplate" placeholder="e.g. {{Definition}}"></textarea>
+          </label>
+        </div>
+        <label>
+          Optional hint template (shown before revealing the answer)
+          <textarea id="hintTemplate" placeholder="e.g. {{Hint}}"></textarea>
+        </label>
+        <div>
+          <button id="startStudy">Start studying</button>
+        </div>
+        <div id="previewContainer"></div>
+      </div>
+    </section>
+
+    <section id="study" class="hidden" aria-live="polite">
+      <h2>3. Study session</h2>
+      <div class="card" id="cardText"></div>
+      <div class="card__hint" id="cardHint"></div>
+      <div class="actions">
+        <button id="showAnswer">Show answer</button>
+        <button id="knowButton" class="hidden">I know it</button>
+        <button id="dontKnowButton" class="hidden secondary">I don't know it</button>
+      </div>
+      <div class="counter" id="progress"></div>
+      <div class="actions">
+        <button id="restartButton" class="hidden secondary">Study again</button>
+        <button id="mainMenuButton" class="hidden secondary">Back to main menu</button>
+      </div>
+    </section>
+
+    <footer>
+      Built for offline study &mdash; save this file and open it directly in your browser anytime.
+    </footer>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const configSection = document.getElementById('config');
+    const frontTemplate = document.getElementById('frontTemplate');
+    const backTemplate = document.getElementById('backTemplate');
+    const hintTemplate = document.getElementById('hintTemplate');
+    const startButton = document.getElementById('startStudy');
+    const previewContainer = document.getElementById('previewContainer');
+
+    const studySection = document.getElementById('study');
+    const cardText = document.getElementById('cardText');
+    const cardHint = document.getElementById('cardHint');
+    const showAnswerBtn = document.getElementById('showAnswer');
+    const knowBtn = document.getElementById('knowButton');
+    const dontKnowBtn = document.getElementById('dontKnowButton');
+    const progressText = document.getElementById('progress');
+    const restartBtn = document.getElementById('restartButton');
+    const mainMenuBtn = document.getElementById('mainMenuButton');
+
+    let deck = [];
+    let originalDeck = [];
+    let currentCard = null;
+    let showingAnswer = false;
+
+    fileInput.addEventListener('change', event => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const text = e.target?.result;
+          if (typeof text !== 'string') {
+            throw new Error('Unable to read file as text.');
+          }
+          const records = parseCsv(text.trim());
+          if (!records.length) {
+            throw new Error('The CSV file is empty.');
+          }
+          initializeConfig(records);
+        } catch (error) {
+          alert(error.message || String(error));
+          resetConfig();
+        }
+      };
+      reader.onerror = () => {
+        alert('Could not read the file. Please try again.');
+        resetConfig();
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+
+    startButton.addEventListener('click', () => {
+      if (!originalDeck.length) {
+        alert('Upload a CSV file first.');
+        return;
+      }
+      const front = frontTemplate.value.trim();
+      const back = backTemplate.value.trim();
+      if (!front || !back) {
+        alert('Please provide both front and back templates.');
+        return;
+      }
+      deck = originalDeck.map(card => ({ ...card }));
+      showingAnswer = false;
+      prepareNextCard();
+      document.getElementById('upload').classList.add('hidden');
+      studySection.classList.remove('hidden');
+      restartBtn.classList.add('hidden');
+      mainMenuBtn.classList.add('hidden');
+      knowBtn.classList.add('hidden');
+      dontKnowBtn.classList.add('hidden');
+      showAnswerBtn.classList.remove('hidden');
+    });
+
+    showAnswerBtn.addEventListener('click', () => {
+      if (!currentCard) return;
+      showingAnswer = true;
+      cardText.textContent = renderTemplate(backTemplate.value, currentCard.data);
+      const hint = renderTemplate(hintTemplate.value, currentCard.data).trim();
+      cardHint.textContent = hint ? `Hint: ${hint}` : '';
+      showAnswerBtn.classList.add('hidden');
+      knowBtn.classList.remove('hidden');
+      dontKnowBtn.classList.remove('hidden');
+      updateProgress();
+    });
+
+    knowBtn.addEventListener('click', () => {
+      if (!currentCard) return;
+      deck.shift();
+      proceedAfterAnswer();
+    });
+
+    dontKnowBtn.addEventListener('click', () => {
+      if (!currentCard) return;
+      deck.push(deck.shift());
+      proceedAfterAnswer();
+    });
+
+    restartBtn.addEventListener('click', () => {
+      deck = originalDeck.map(card => ({ ...card }));
+      showingAnswer = false;
+      prepareNextCard();
+      restartBtn.classList.add('hidden');
+      mainMenuBtn.classList.add('hidden');
+      showAnswerBtn.classList.remove('hidden');
+      knowBtn.classList.add('hidden');
+      dontKnowBtn.classList.add('hidden');
+    });
+
+    mainMenuBtn.addEventListener('click', () => {
+      studySection.classList.add('hidden');
+      document.getElementById('upload').classList.remove('hidden');
+      resetStudyState();
+    });
+
+    function parseCsv(text) {
+      const rows = [];
+      let current = '';
+      let inQuotes = false;
+      let row = [];
+
+      function endCell() {
+        row.push(current);
+        current = '';
+      }
+
+      function endRow() {
+        rows.push(row);
+        row = [];
+      }
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          endCell();
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && next === '\n') {
+            i++;
+          }
+          endCell();
+          endRow();
+        } else {
+          current += char;
+        }
+      }
+
+      endCell();
+      if (row.length) {
+        endRow();
+      }
+
+      if (!rows.length) return [];
+      const headers = rows[0].map(header => header.trim());
+      return rows.slice(1)
+        .filter(r => r.some(cell => cell.trim().length))
+        .map((rowCells, index) => {
+          const data = {};
+          headers.forEach((header, idx) => {
+            data[header] = rowCells[idx] !== undefined ? rowCells[idx].trim() : '';
+          });
+          return { id: index + 1, data };
+        });
+    }
+
+    function initializeConfig(records) {
+      originalDeck = records;
+      configSection.classList.remove('hidden');
+      const columns = Object.keys(records[0].data);
+      if (!frontTemplate.value) {
+        frontTemplate.value = `{{${columns[0] || ''}}}`;
+      }
+      if (!backTemplate.value && columns[1]) {
+        backTemplate.value = `{{${columns[1]}}}`;
+      }
+      renderPreview(records);
+    }
+
+    function resetConfig() {
+      configSection.classList.add('hidden');
+      previewContainer.innerHTML = '';
+      originalDeck = [];
+      frontTemplate.value = '';
+      backTemplate.value = '';
+      hintTemplate.value = '';
+    }
+
+    function renderPreview(records) {
+      const columns = Object.keys(records[0].data);
+      const headerHtml = columns.map(col => `<th>${escapeHtml(col)}</th>`).join('');
+      const bodyHtml = records.slice(0, 5).map(record => {
+        const cells = columns.map(col => `<td>${escapeHtml(record.data[col] || '')}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      previewContainer.innerHTML = `
+        <h3>Preview (${records.length} cards)</h3>
+        <table class="preview">
+          <thead><tr>${headerHtml}</tr></thead>
+          <tbody>${bodyHtml}</tbody>
+        </table>
+        <p>Use <code>{{ColumnName}}</code> to pull values into the templates above.</p>
+      `;
+    }
+
+    function prepareNextCard() {
+      if (!deck.length) {
+        cardText.textContent = 'Great job! You have completed all cards in this cycle.';
+        cardHint.textContent = '';
+        progressText.textContent = '';
+        showAnswerBtn.classList.add('hidden');
+        knowBtn.classList.add('hidden');
+        dontKnowBtn.classList.add('hidden');
+        restartBtn.classList.remove('hidden');
+        mainMenuBtn.classList.remove('hidden');
+        currentCard = null;
+        return;
+      }
+      currentCard = deck[0];
+      showingAnswer = false;
+      cardText.textContent = renderTemplate(frontTemplate.value, currentCard.data);
+      const hint = renderTemplate(hintTemplate.value, currentCard.data).trim();
+      cardHint.textContent = hint ? `Hint: ${hint}` : '';
+      showAnswerBtn.classList.remove('hidden');
+      knowBtn.classList.add('hidden');
+      dontKnowBtn.classList.add('hidden');
+      updateProgress();
+    }
+
+    function proceedAfterAnswer() {
+      showingAnswer = false;
+      prepareNextCard();
+    }
+
+    function updateProgress() {
+      const total = originalDeck.length;
+      const remaining = deck.length;
+      const queueRemaining = showingAnswer ? Math.max(remaining - 1, 0) : remaining;
+      const learned = total - queueRemaining;
+      progressText.textContent = `Remaining: ${queueRemaining} · Learned this round: ${learned}`;
+    }
+
+    function renderTemplate(template, data) {
+      return template.replace(/{{\s*([^{}\s]+)\s*}}/g, (match, key) => {
+        return data[key] !== undefined ? data[key] : '';
+      });
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function resetStudyState() {
+      deck = [];
+      currentCard = null;
+      cardText.textContent = '';
+      cardHint.textContent = '';
+      progressText.textContent = '';
+      showAnswerBtn.classList.remove('hidden');
+      knowBtn.classList.add('hidden');
+      dontKnowBtn.classList.add('hidden');
+      restartBtn.classList.add('hidden');
+      mainMenuBtn.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
