@@ -442,6 +442,28 @@
       pointer-events: none;
     }
 
+    .confetti-container {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .confetti-container.active {
+      opacity: 1;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 0.6rem;
+      height: 1.2rem;
+      border-radius: 0.2rem;
+      opacity: 0.9;
+    }
+
     .theme-toggle {
       align-self: flex-end;
     }
@@ -599,7 +621,8 @@
     </footer>
   </main>
 
-  <div class="version-badge" aria-label="Version">v1.1.0</div>
+  <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
+  <div class="version-badge" aria-label="Version">v1.1.1</div>
 
   <script>
     const themeToggleBtn = document.getElementById('themeToggle');
@@ -636,6 +659,9 @@
     const progressLabel = document.getElementById('progressText');
     const progressFill = document.getElementById('progressFill');
     const restartBtn = document.getElementById('restartButton');
+    const confettiContainer = document.getElementById('confettiContainer');
+
+    const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
 
     const storageKey = 'flashcardStudioSets';
 
@@ -1165,6 +1191,7 @@
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
       restartBtn.classList.add('hidden');
+      clearConfetti();
       updateProgress();
     }
 
@@ -1178,6 +1205,7 @@
         dontKnowBtn.classList.add('hidden');
         restartBtn.classList.remove('hidden');
         currentCard = null;
+        triggerConfetti();
         return;
       }
       currentCard = deck[0];
@@ -1186,6 +1214,7 @@
       showAnswerBtn.classList.remove('hidden');
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
+      clearConfetti();
     }
 
     function updateProgress() {
@@ -1223,6 +1252,7 @@
       knowBtn.classList.add('hidden');
       dontKnowBtn.classList.add('hidden');
       restartBtn.classList.add('hidden');
+      clearConfetti();
     }
 
     function renderTemplate(template, data) {
@@ -1250,6 +1280,55 @@
       } catch (error) {
         return value;
       }
+    }
+
+    function triggerConfetti() {
+      if (!confettiContainer) return;
+      clearConfetti();
+      confettiContainer.classList.add('active');
+      const fragment = document.createDocumentFragment();
+      const pieceCount = 140;
+      for (let i = 0; i < pieceCount; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti-piece';
+        const color = confettiColors[i % confettiColors.length];
+        piece.style.backgroundColor = color;
+        const left = Math.random() * 100;
+        const rotate = Math.random() * 720 - 360;
+        const fallDistance = 110 + Math.random() * 20;
+        const horizontalDrift = (Math.random() - 0.5) * 40;
+        const duration = 2200 + Math.random() * 1500;
+        piece.style.left = `${left}vw`;
+        piece.style.top = '-10vh';
+        const animation = piece.animate(
+          [
+            { transform: 'translate3d(0, -10vh, 0) rotate(0deg)', opacity: 1 },
+            {
+              transform: `translate3d(${horizontalDrift}vw, ${fallDistance}vh, 0) rotate(${rotate}deg)`,
+              opacity: 0.2
+            }
+          ],
+          {
+            duration,
+            easing: 'linear',
+            delay: Math.random() * 200
+          }
+        );
+        animation.onfinish = () => {
+          piece.remove();
+        };
+        fragment.appendChild(piece);
+      }
+      confettiContainer.appendChild(fragment);
+      window.setTimeout(() => {
+        clearConfetti();
+      }, 4000);
+    }
+
+    function clearConfetti() {
+      if (!confettiContainer) return;
+      confettiContainer.classList.remove('active');
+      confettiContainer.innerHTML = '';
     }
 
     function parseCsv(text) {
