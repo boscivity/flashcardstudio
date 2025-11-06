@@ -49,9 +49,12 @@ const confettiContainer = document.getElementById('confettiContainer');
 const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
 
 const storageKey = 'flashcardStudioSets';
-const usersStorageKey = 'flashcardStudioUsers';
-const currentUserStorageKey = 'flashcardStudioCurrentUser';
 const pendingShareStorageKey = 'flashcardStudioPendingShare';
+
+const SUPABASE_URL = 'https://tbydrjbqixrrowriuvjx.supabase.co';
+const SUPABASE_SERVICE_KEY = 'sb_secret_55Lz-zux75p5xxkYItdT-w_MViTif5f';
+
+const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 let sets = [];
 let editorState = null;
@@ -63,8 +66,7 @@ let originalDeck = [];
 let deck = [];
 let currentCard = null;
 
-let users = [];
-let currentUserId = null;
+let currentSession = null;
 let currentUser = null;
 let pendingSharedSet = null;
 let legacySets = [];
@@ -105,13 +107,26 @@ showLogInBtn?.addEventListener('click', () => {
   toggleAccountForms('login');
 });
 
-logoutButton?.addEventListener('click', () => {
-  logOutCurrentUser();
+logoutButton?.addEventListener('click', async () => {
+  if (!supabase) {
+    setAccountStatusMessage('Supabase client is not available.', 'error');
+    return;
+  }
+  setAccountStatusMessage('Signing you out…', 'info', false);
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Could not sign out', error);
+    setAccountStatusMessage('Could not log you out. Please try again.', 'error');
+  }
 });
 
 signUpForm?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!signUpEmailInput || !signUpPasswordInput) return;
+  if (!supabase) {
+    setAccountStatusMessage('Supabase client is not available.', 'error');
+    return;
+  }
   const email = signUpEmailInput.value.trim().toLowerCase();
   const password = signUpPasswordInput.value;
   if (!email || !password) {
@@ -126,25 +141,22 @@ signUpForm?.addEventListener('submit', async event => {
     setAccountStatusMessage('Enter a valid email address.', 'error');
     return;
   }
-  if (users.some(user => user.email === email)) {
-    setAccountStatusMessage('That email is already registered. Try logging in instead.', 'error');
-    return;
-  }
   try {
-    const passwordHash = await hashPassword(password);
-    const newUser = {
-      id: generateUserId(),
+    setAccountStatusMessage('Creating your account…', 'info', true);
+    const { data, error } = await supabase.auth.signUp({
       email,
-      passwordHash,
-      sets: []
-    };
-    users.push(newUser);
-    saveUsersToStorage();
-    const result = await setCurrentUser(newUser.id);
+      password
+    });
+    if (error) {
+      setAccountStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
+      return;
+    }
     signUpForm.reset();
     logInForm?.reset();
-    if (!result.importedLegacy && !result.importedShared) {
+    if (data?.session) {
       setAccountStatusMessage('Account created! You are now logged in.', 'success');
+    } else {
+      setAccountStatusMessage('Account created! Check your email to confirm your address.', 'success');
     }
   } catch (error) {
     console.error(error);
@@ -155,26 +167,28 @@ signUpForm?.addEventListener('submit', async event => {
 logInForm?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!logInEmailInput || !logInPasswordInput) return;
+  if (!supabase) {
+    setAccountStatusMessage('Supabase client is not available.', 'error');
+    return;
+  }
   const email = logInEmailInput.value.trim().toLowerCase();
   const password = logInPasswordInput.value;
   if (!email || !password) {
     setAccountStatusMessage('Enter your email and password to log in.', 'error');
     return;
   }
-  const user = users.find(candidate => candidate.email === email);
-  if (!user) {
-    setAccountStatusMessage('No account found with that email address. Try signing up.', 'error');
-    return;
-  }
   try {
-    const passwordHash = await hashPassword(password);
-    if (passwordHash !== user.passwordHash) {
-      setAccountStatusMessage('Incorrect password. Please try again.', 'error');
+    setAccountStatusMessage('Signing you in…', 'info', true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) {
+      setAccountStatusMessage(error.message || 'Could not log you in. Please try again.', 'error');
       return;
     }
-    const result = await setCurrentUser(user.id);
     logInForm.reset();
-    if (!result.importedLegacy && !result.importedShared) {
+    if (data?.session) {
       setAccountStatusMessage('Welcome back! Your sets are ready.', 'success');
     }
   } catch (error) {
@@ -237,7 +251,7 @@ importSetInput.addEventListener('change', event => {
   reader.readAsText(file, 'utf-8');
 });
 
-setsList.addEventListener('click', event => {
+setsList.addEventListener('click', async event => {
   if (!requireAccount('manage your sets')) return;
   const button = event.target.closest('button[data-action]');
   if (!button) return;
@@ -259,9 +273,14 @@ setsList.addEventListener('click', event => {
     const set = sets.find(s => s.id === setId);
     if (!set) return;
     if (confirm(`Delete "${set.name}"? This cannot be undone.`)) {
-      sets = sets.filter(s => s.id !== setId);
-      saveSets();
-      renderSetsList();
+      try {
+        await deleteSetFromDatabase(setId);
+        await refreshSetsFromDatabase();
+        setAccountStatusMessage(`Deleted "${set.name}".`, 'success');
+      } catch (error) {
+        console.error('Could not delete set', error);
+        setAccountStatusMessage('Could not delete that set. Please try again.', 'error');
+      }
     }
   }
 });
@@ -365,8 +384,11 @@ cancelSetBtn.addEventListener('click', () => {
   closeSetEditor();
 });
 
-saveSetBtn.addEventListener('click', () => {
+saveSetBtn.addEventListener('click', async () => {
   if (!editorState) return;
+  if (!requireAccount('save sets')) {
+    return;
+  }
   const trimmedName = (editorState.name || '').trim();
   if (!trimmedName) {
     alert('Give your set a name.');
@@ -404,14 +426,15 @@ saveSetBtn.addEventListener('click', () => {
       hint: (editorState.templates.hint || '').trim()
     }
   };
-  if (editorMode === 'create') {
-    sets.push(setToSave);
-  } else {
-    sets = sets.map(set => (set.id === setToSave.id ? setToSave : set));
+  try {
+    await saveSetToDatabase(setToSave);
+    await refreshSetsFromDatabase();
+    closeSetEditor();
+    setAccountStatusMessage(`Saved "${setToSave.name}".`, 'success');
+  } catch (error) {
+    console.error('Could not save set', error);
+    setAccountStatusMessage('Could not save your set. Please try again.', 'error');
   }
-  saveSets();
-  renderSetsList();
-  closeSetEditor();
 });
 
 backButton.addEventListener('click', () => {
@@ -485,28 +508,80 @@ document.addEventListener('keydown', event => {
 });
 initializeAccountState();
 
-function loadSetsFromStorage() {
-  if (!currentUser) {
+async function refreshSetsFromDatabase({ showLoader = false } = {}) {
+  if (!currentUser || !supabase) {
     sets = [];
+    renderSetsList();
     return;
   }
-  const storedSets = Array.isArray(currentUser.sets) ? currentUser.sets : [];
-  sets = storedSets.map(cloneSetForEditing);
-  if (!sets.length) {
-    const starterSet = createStarterSet();
-    sets.push(starterSet);
-    saveSets();
+  if (showLoader) {
+    setAccountStatusMessage('Loading your sets…', 'info', false);
+  }
+  try {
+    const { data, error } = await supabase
+      .from('flashcard_sets')
+      .select('id, name, columns, cards, templates')
+      .eq('user_id', currentUser.id)
+      .order('name', { ascending: true });
+    if (error) {
+      throw error;
+    }
+    const fetchedSets = Array.isArray(data)
+      ? data.map(record =>
+          cloneSetForEditing({
+            id: record.id,
+            name: record.name,
+            columns: record.columns,
+            cards: record.cards,
+            templates: record.templates
+          })
+        )
+      : [];
+    if (!fetchedSets.length) {
+      const starterSet = createStarterSet();
+      await saveSetToDatabase(starterSet, { silent: true });
+      sets = [starterSet];
+    } else {
+      sets = fetchedSets;
+    }
+    renderSetsList();
+  } catch (error) {
+    console.error('Could not load sets', error);
+    sets = [];
+    renderSetsList();
+    setAccountStatusMessage('Could not load your sets from Supabase. Please refresh and try again.', 'error');
   }
 }
 
-function saveSets() {
-  if (!currentUser) {
-    localStorage.setItem(storageKey, JSON.stringify(sets));
-    return;
+async function saveSetToDatabase(setToSave, { silent = false } = {}) {
+  if (!currentUser || !supabase) {
+    throw new Error('No logged in user.');
   }
-  currentUser.sets = sets.map(cloneSetForStorage);
-  saveUsersToStorage();
-  localStorage.removeItem(storageKey);
+  const payload = {
+    id: setToSave.id,
+    user_id: currentUser.id,
+    name: setToSave.name,
+    columns: setToSave.columns,
+    cards: setToSave.cards.map(card => ({ id: card.id, data: { ...card.data } })),
+    templates: { ...setToSave.templates }
+  };
+  const { error } = await supabase.from('flashcard_sets').upsert(payload, { onConflict: 'id' });
+  if (error) {
+    if (!silent) {
+      setAccountStatusMessage(error.message || 'Could not save your set.', 'error');
+    }
+    throw error;
+  }
+}
+
+async function deleteSetFromDatabase(setId) {
+  if (!currentUser || !supabase) {
+    throw new Error('No logged in user.');
+  }
+  const { error } = await supabase.from('flashcard_sets').delete().eq('id', setId).eq('user_id', currentUser.id);
+  if (error) {
+    throw error;
+  }
 }
 
 function renderSetsList() {
@@ -541,19 +616,51 @@ function renderSetsList() {
     .join('');
 }
 
-function initializeAccountState() {
-  loadUsersFromStorage();
-  loadCurrentUserFromStorage();
+async function initializeAccountState() {
   loadLegacySetsFromLocalStorage();
   restorePendingShareFromStorage();
   renderAccountUi();
-  loadSetsFromStorage();
-  const importedLegacy = adoptLegacySetsIfAvailable();
-  if (!importedLegacy) {
-    renderSetsList();
+  if (!supabase) {
+    setAccountStatusMessage('Supabase client could not be initialised.', 'error');
+    return;
   }
-  handlePendingSharedImport();
-  handleShareLinkFromUrl();
+  try {
+    const {
+      data: { session },
+      error
+    } = await supabase.auth.getSession();
+    if (error) {
+      throw error;
+    }
+    await handleAuthChange(session);
+  } catch (error) {
+    console.error('Could not initialise auth state', error);
+    setAccountStatusMessage('Could not connect to Supabase. Please refresh the page.', 'error');
+  }
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    await handleAuthChange(session);
+  });
+  await handleShareLinkFromUrl();
+}
+
+async function handleAuthChange(session) {
+  currentSession = session;
+  currentUser = session?.user ?? null;
+  legacySetsPrompted = false;
+  renderAccountUi();
+  if (!currentUser) {
+    sets = [];
+    renderSetsList();
+    return;
+  }
+  await refreshSetsFromDatabase({ showLoader: true });
+  const importedLegacy = await adoptLegacySetsIfAvailable();
+  if (!importedLegacy) {
+    await handlePendingSharedImport();
+  } else {
+    await refreshSetsFromDatabase();
+    await handlePendingSharedImport();
+  }
 }
 
 function renderAccountUi() {
@@ -625,62 +732,6 @@ function requireAccount(actionDescription) {
   return false;
 }
 
-function logOutCurrentUser() {
-  currentUserId = null;
-  currentUser = null;
-  sets = [];
-  saveCurrentUserId();
-  renderAccountUi();
-  renderSetsList();
-  setAccountStatusMessage('You are logged out. Log in or create an account to continue.', 'info', false);
-}
-
-function loadUsersFromStorage() {
-  try {
-    const raw = localStorage.getItem(usersStorageKey);
-    const parsed = raw ? JSON.parse(raw) : [];
-    users = Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.warn('Could not load users', error);
-    users = [];
-  }
-}
-
-function loadCurrentUserFromStorage() {
-  currentUserId = localStorage.getItem(currentUserStorageKey);
-  currentUser = currentUserId ? users.find(user => user.id === currentUserId) || null : null;
-  if (!currentUser) {
-    currentUserId = null;
-  }
-}
-
-function saveCurrentUserId() {
-  if (currentUserId) {
-    localStorage.setItem(currentUserStorageKey, currentUserId);
-  } else {
-    localStorage.removeItem(currentUserStorageKey);
-  }
-}
-
-function saveUsersToStorage() {
-  localStorage.setItem(usersStorageKey, JSON.stringify(users));
-  saveCurrentUserId();
-}
-
-async function setCurrentUser(userId) {
-  currentUserId = userId;
-  currentUser = users.find(user => user.id === userId) || null;
-  saveCurrentUserId();
-  renderAccountUi();
-  loadSetsFromStorage();
-  const importedLegacy = adoptLegacySetsIfAvailable();
-  if (!importedLegacy) {
-    renderSetsList();
-  }
-  const importedShared = handlePendingSharedImport();
-  return { importedLegacy, importedShared };
-}
-
 function loadLegacySetsFromLocalStorage() {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -692,7 +743,7 @@ function loadLegacySetsFromLocalStorage() {
   }
 }
 
-function adoptLegacySetsIfAvailable() {
+async function adoptLegacySetsIfAvailable() {
   if (!currentUser || !legacySets.length || legacySetsPrompted) {
     return false;
   }
@@ -701,14 +752,21 @@ function adoptLegacySetsIfAvailable() {
   if (!shouldImport) {
     return false;
   }
-  const normalisedSets = legacySets.map(set => cloneSetForEditing(set));
-  sets = normalisedSets;
-  saveSets();
-  legacySets = [];
-  localStorage.removeItem(storageKey);
-  setAccountStatusMessage('Imported your locally saved sets into your account.', 'success');
-  renderSetsList();
-  return true;
+  try {
+    const normalisedSets = legacySets.map(set => cloneSetForEditing(set));
+    for (const set of normalisedSets) {
+      await saveSetToDatabase(set, { silent: true });
+    }
+    legacySets = [];
+    localStorage.removeItem(storageKey);
+    setAccountStatusMessage('Imported your locally saved sets into your account.', 'success');
+    await refreshSetsFromDatabase();
+    return true;
+  } catch (error) {
+    console.error('Could not import legacy sets', error);
+    setAccountStatusMessage('Could not import your locally saved sets. Please try again.', 'error');
+    return false;
+  }
 }
 
 function restorePendingShareFromStorage() {
@@ -735,7 +793,7 @@ function clearPendingSharedSet() {
   localStorage.removeItem(pendingShareStorageKey);
 }
 
-function handlePendingSharedImport() {
+async function handlePendingSharedImport() {
   if (!currentUser || !pendingSharedSet) {
     return false;
   }
@@ -748,14 +806,19 @@ function handlePendingSharedImport() {
   if (!shouldImport) {
     return false;
   }
-  sets.push(preparedSet);
-  saveSets();
-  renderSetsList();
-  setAccountStatusMessage(`Added "${preparedSet.name}" to your sets.`, 'success');
-  return true;
+  try {
+    await saveSetToDatabase(preparedSet);
+    await refreshSetsFromDatabase();
+    setAccountStatusMessage(`Added "${preparedSet.name}" to your sets.`, 'success');
+    return true;
+  } catch (error) {
+    console.error('Could not import shared set', error);
+    setAccountStatusMessage('Could not add that shared set to your account. Please try again.', 'error');
+    return false;
+  }
 }
 
-function handleShareLinkFromUrl() {
+async function handleShareLinkFromUrl() {
   const url = new URL(window.location.href);
   const shareParam = url.searchParams.get('share');
   if (!shareParam) {
@@ -769,7 +832,7 @@ function handleShareLinkFromUrl() {
     const payload = JSON.parse(decoded);
     storePendingSharedSet(payload);
     if (currentUser) {
-      handlePendingSharedImport();
+      await handlePendingSharedImport();
     } else {
       setAccountStatusMessage('Log in to add the shared set to your account.', 'info', true);
       toggleAccountForms('login');
@@ -918,16 +981,6 @@ function cloneSetForEditing(set) {
   return normaliseIncomingSet(set, { fallbackName: set?.name || 'Untitled set', preserveIds: true });
 }
 
-function cloneSetForStorage(set) {
-  return {
-    id: set.id,
-    name: set.name,
-    columns: [...set.columns],
-    cards: set.cards.map(card => ({ id: card.id, data: { ...card.data } })),
-    templates: { ...set.templates }
-  };
-}
-
 function createStarterSet() {
   return {
     id: generateId(),
@@ -961,31 +1014,6 @@ function createStarterSet() {
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  if (window.crypto?.subtle) {
-    const digest = await window.crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(digest))
-      .map(byte => byte.toString(16).padStart(2, '0'))
-      .join('');
-  }
-  return simpleHash(password);
-}
-
-function simpleHash(value) {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash << 5) - hash + value.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(16);
-}
-
-function generateUserId() {
-  return `user-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function encodeBase64(text) {
@@ -1332,10 +1360,16 @@ function parseCsv(text) {
 }
 
 function generateId() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
   return `set-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function generateCardId() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
   return `card-${Math.random().toString(36).slice(2, 10)}`;
 }
 
