@@ -35,6 +35,18 @@ const restartBtn = document.getElementById('restartButton');
 const returnBtn = document.getElementById('returnButton');
 const confettiContainer = document.getElementById('confettiContainer');
 
+const deprecatedHeroMessages = new Set([
+  'Everything is stored locally in this single HTML file, ready to study anytime.',
+  'Built for offline study — save this file and open it directly in your browser anytime.'
+]);
+
+document.querySelectorAll('header p').forEach(paragraph => {
+  const text = (paragraph.textContent || '').trim();
+  if (deprecatedHeroMessages.has(text)) {
+    paragraph.remove();
+  }
+});
+
 const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
 
 const storageKey = 'flashcardStudioSets';
