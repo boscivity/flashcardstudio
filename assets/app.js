@@ -93,18 +93,18 @@ function navigateTo(page) {
   
   if (page === 'home') {
     homePage?.classList.remove('hidden');
-    window.history.pushState({ page: 'home' }, '', '/');
+    window.history.pushState({ page: 'home' }, '', '#home');
   } else if (page === 'login') {
     loginPage?.classList.remove('hidden');
-    window.history.pushState({ page: 'login' }, '', '/#login');
+    window.history.pushState({ page: 'login' }, '', '#login');
     setTimeout(() => logInEmailInput?.focus(), 100);
   } else if (page === 'signup') {
     signupPage?.classList.remove('hidden');
-    window.history.pushState({ page: 'signup' }, '', '/#signup');
+    window.history.pushState({ page: 'signup' }, '', '#signup');
     setTimeout(() => signUpEmailInput?.focus(), 100);
   } else if (page === 'app') {
     appPage?.classList.remove('hidden');
-    window.history.pushState({ page: 'app' }, '', '/#app');
+    window.history.pushState({ page: 'app' }, '', '#app');
   }
 }
 
