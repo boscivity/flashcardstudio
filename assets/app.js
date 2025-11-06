@@ -2,8 +2,9 @@
 const homePage = document.getElementById('homePage');
 const loginPage = document.getElementById('loginPage');
 const signupPage = document.getElementById('signupPage');
-const settingsPage = document.getElementById('settingsPage');
 const appPage = document.getElementById('appPage');
+
+const themeToggleBtn = document.getElementById('themeToggle');
 const setManagerSection = document.getElementById('setManager');
 const setEditorSection = document.getElementById('setEditor');
 const setEditorTitle = document.getElementById('setEditorTitle');
@@ -35,14 +36,6 @@ const logInEmailInput = document.getElementById('logInEmail');
 const logInPasswordInput = document.getElementById('logInPassword');
 const switchToSignUpBtn = document.getElementById('switchToSignUp');
 const switchToLogInBtn = document.getElementById('switchToLogIn');
-const topSettingsBtn = document.getElementById('topSettingsButton');
-
-const themePreferenceInputs = document.querySelectorAll('input[name="themePreference"]');
-const settingsThemeStatus = document.getElementById('settingsThemeStatus');
-const passwordForm = document.getElementById('passwordForm');
-const newPasswordInput = document.getElementById('newPasswordInput');
-const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput');
-const passwordStatus = document.getElementById('passwordStatus');
 
 const topAccountStatus = document.getElementById('topAccountStatus');
 const topSignUpBtn = document.getElementById('topSignUpButton');
@@ -97,9 +90,8 @@ function navigateTo(page) {
   homePage?.classList.add('hidden');
   loginPage?.classList.add('hidden');
   signupPage?.classList.add('hidden');
-  settingsPage?.classList.add('hidden');
   appPage?.classList.add('hidden');
-
+  
   if (page === 'home') {
     homePage?.classList.remove('hidden');
     window.history.pushState({ page: 'home' }, '', '#home');
@@ -111,25 +103,6 @@ function navigateTo(page) {
     signupPage?.classList.remove('hidden');
     window.history.pushState({ page: 'signup' }, '', '#signup');
     setTimeout(() => signUpEmailInput?.focus(), 100);
-  } else if (page === 'settings') {
-    if (!currentUser) {
-      navigateTo('login');
-      return;
-    }
-    if (settingsThemeStatus) {
-      settingsThemeStatus.classList.add('hidden');
-      settingsThemeStatus.textContent = '';
-      settingsThemeStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
-    }
-    if (passwordStatus) {
-      passwordStatus.classList.add('hidden');
-      passwordStatus.textContent = '';
-      passwordStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
-    }
-    passwordForm?.reset();
-    settingsPage?.classList.remove('hidden');
-    window.history.pushState({ page: 'settings' }, '', '#settings');
-    syncThemePreferenceControls();
   } else if (page === 'app') {
     appPage?.classList.remove('hidden');
     window.history.pushState({ page: 'app' }, '', '#app');
@@ -146,6 +119,12 @@ window.addEventListener('popstate', handlePopState);
 const storedTheme = localStorage.getItem('flashcard-studio-theme');
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
 applyTheme(initialTheme);
+
+themeToggleBtn?.addEventListener('click', () => {
+  const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+  applyTheme(nextTheme);
+  localStorage.setItem('flashcard-studio-theme', nextTheme);
+});
 
 brandLink?.addEventListener('click', () => {
   if (currentUser) {
@@ -188,11 +167,6 @@ switchToSignUpBtn?.addEventListener('click', () => {
 
 switchToLogInBtn?.addEventListener('click', () => {
   navigateTo('login');
-});
-
-topSettingsBtn?.addEventListener('click', () => {
-  if (!requireAccount('view settings')) return;
-  navigateTo('settings');
 });
 
 downloadExampleBtn.addEventListener('click', () => {
@@ -246,16 +220,7 @@ signUpForm?.addEventListener('submit', async event => {
       }
     });
     if (error) {
-      const normalised = (error.message || '').toLowerCase();
-      if (
-        (normalised.includes('already') && normalised.includes('registered')) ||
-        (normalised.includes('already') && normalised.includes('exist')) ||
-        normalised.includes('already in use')
-      ) {
-        setSignupStatusMessage('An account with that email already exists. Try logging in instead.', 'error');
-      } else {
-        setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
-      }
+      setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
       return;
     }
     signUpForm.reset();
@@ -865,7 +830,6 @@ function updateTopBar() {
     topLogoutBtn?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
-    topSettingsBtn?.classList.remove('hidden');
     if (topAccountStatus) {
       topAccountStatus.textContent = `Signed in as ${currentUser.email}`;
       topAccountStatus.dataset.state = 'authenticated';
@@ -874,7 +838,6 @@ function updateTopBar() {
     topLogoutBtn?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
-    topSettingsBtn?.classList.add('hidden');
     if (topAccountStatus) {
       topAccountStatus.textContent = 'You are browsing as a guest';
       topAccountStatus.dataset.state = 'guest';
@@ -910,37 +873,6 @@ function setSignupFormDisabled(disabled) {
     const elements = signUpForm.querySelectorAll('input, button');
     elements.forEach(el => el.disabled = disabled);
   }
-}
-
-function setThemeStatusMessage(message, type = 'info') {
-  if (!settingsThemeStatus) return;
-  settingsThemeStatus.classList.remove('hidden');
-  settingsThemeStatus.textContent = message;
-  settingsThemeStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
-  settingsThemeStatus.classList.add(`account-status--${type}`);
-}
-
-function setPasswordStatusMessage(message, type = 'info') {
-  if (!passwordStatus) return;
-  passwordStatus.classList.remove('hidden');
-  passwordStatus.textContent = message;
-  passwordStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
-  passwordStatus.classList.add(`account-status--${type}`);
-}
-
-function setPasswordFormDisabled(disabled) {
-  if (!passwordForm) return;
-  const elements = passwordForm.querySelectorAll('input, button');
-  elements.forEach(element => {
-    element.disabled = disabled;
-  });
-}
-
-function syncThemePreferenceControls() {
-  const currentTheme = document.body.dataset.theme === 'light' ? 'light' : 'dark';
-  themePreferenceInputs.forEach(input => {
-    input.checked = input.value === currentTheme;
-  });
 }
 
 function requireAccount(actionDescription) {
@@ -1600,58 +1532,16 @@ function generateCardId() {
 function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
   document.documentElement.style.colorScheme = theme;
-  syncThemePreferenceControls();
+  if (!themeToggleBtn) {
+    return;
+  }
+  const nextTheme = theme === 'dark' ? 'light' : 'dark';
+  const icon = nextTheme === 'light' ? '☀️' : '🌙';
+  const label = `${nextTheme.charAt(0).toUpperCase()}${nextTheme.slice(1)} mode`;
+  themeToggleBtn.innerHTML = `
+    <span class="theme-toggle__icon" aria-hidden="true">${icon}</span>
+    <span class="theme-toggle__label">${label}</span>
+  `;
+  themeToggleBtn.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
+  themeToggleBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
 }
-themePreferenceInputs.forEach(input => {
-  input.addEventListener('change', event => {
-    const target = event.target;
-    if (!target || target.type !== 'radio') {
-      return;
-    }
-    const selectedTheme = target.value === 'light' ? 'light' : 'dark';
-    applyTheme(selectedTheme);
-    localStorage.setItem('flashcard-studio-theme', selectedTheme);
-    setThemeStatusMessage('Theme updated.', 'success');
-  });
-});
-
-passwordForm?.addEventListener('submit', async event => {
-  event.preventDefault();
-  if (!supabase) {
-    setPasswordStatusMessage('Supabase client is not available.', 'error');
-    return;
-  }
-  if (!currentUser) {
-    setPasswordStatusMessage('Log in again to update your password.', 'error');
-    navigateTo('login');
-    return;
-  }
-  const newPassword = newPasswordInput?.value || '';
-  const confirmPassword = confirmNewPasswordInput?.value || '';
-
-  if (newPassword.length < 8) {
-    setPasswordStatusMessage('Use a password with at least 8 characters.', 'error');
-    return;
-  }
-  if (newPassword !== confirmPassword) {
-    setPasswordStatusMessage('The passwords do not match. Try again.', 'error');
-    return;
-  }
-
-  try {
-    setPasswordFormDisabled(true);
-    setPasswordStatusMessage('Updating your password…', 'info');
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      setPasswordStatusMessage(error.message || 'Could not update your password. Please try again.', 'error');
-      return;
-    }
-    passwordForm.reset();
-    setPasswordStatusMessage('Your password has been updated.', 'success');
-  } catch (error) {
-    console.error('Could not update password', error);
-    setPasswordStatusMessage('Something went wrong while updating your password. Please try again.', 'error');
-  } finally {
-    setPasswordFormDisabled(false);
-  }
-});
