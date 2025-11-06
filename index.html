@@ -18,12 +18,9 @@
         <div class="top-bar__buttons">
           <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
           <button id="topLogInButton" type="button" class="secondary">Log in</button>
+          <button id="topSettingsButton" type="button" class="secondary hidden">Settings</button>
           <button id="topLogoutButton" type="button" class="secondary hidden">Log out</button>
         </div>
-        <button type="button" class="secondary" id="themeToggle" aria-label="Switch theme" aria-pressed="true">
-          <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
-          <span class="theme-toggle__label">Dark mode</span>
-        </button>
       </div>
     </div>
   </div>
@@ -159,7 +156,7 @@
         </div>
         <div class="flex-row">
           <label class="required-field">
-            Set name
+            <span class="field-label">Set name <span class="required-indicator" aria-hidden="true">*</span></span>
             <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
           </label>
         </div>
@@ -177,11 +174,11 @@
           <p class="subtitle" style="font-size: 0.95rem; text-align: left;">Use <code>{{FieldName}}</code> to pull values from your cards. Front and back are required.</p>
           <div class="flex-row">
             <label class="required-field">
-              Front template
+              <span class="field-label">Front template <span class="required-indicator" aria-hidden="true">*</span></span>
               <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
             </label>
             <label class="required-field">
-              Back template
+              <span class="field-label">Back template <span class="required-indicator" aria-hidden="true">*</span></span>
               <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
             </label>
           </div>
@@ -234,8 +231,51 @@
     </main>
   </div>
 
+  <!-- Settings Page -->
+  <div id="settingsPage" class="page hidden">
+    <main class="settings-main">
+      <div class="settings-container">
+        <h1>Account settings</h1>
+        <p class="subtitle">Manage your account preferences.</p>
+
+        <section class="settings-section">
+          <h2>Appearance</h2>
+          <p class="settings-description">Choose the theme that works best for you.</p>
+          <div id="settingsThemeStatus" class="account-status hidden" role="status"></div>
+          <form id="themeForm" class="settings-options" aria-label="Theme selection">
+            <label class="settings-option">
+              <input type="radio" name="themePreference" value="dark" />
+              <span>Dark theme (default)</span>
+            </label>
+            <label class="settings-option">
+              <input type="radio" name="themePreference" value="light" />
+              <span>Light theme</span>
+            </label>
+          </form>
+        </section>
+
+        <section class="settings-section">
+          <h2>Security</h2>
+          <p class="settings-description">Update your password to keep your account secure.</p>
+          <div id="passwordStatus" class="account-status hidden" role="status"></div>
+          <form id="passwordForm" class="account-form">
+            <label>
+              New password
+              <input id="newPasswordInput" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required />
+            </label>
+            <label>
+              Confirm new password
+              <input id="confirmNewPasswordInput" type="password" autocomplete="new-password" minlength="8" placeholder="Re-enter your new password" required />
+            </label>
+            <button type="submit">Update password</button>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.3</div>
+  <div class="version-badge" aria-label="Version">v1.6.4</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
