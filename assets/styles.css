@@ -862,6 +862,20 @@ footer {
   }
 }
 
+/* Required field validation */
+input.field-error,
+textarea.field-error {
+  border: 2px solid #ef4444;
+  outline: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+label.required-field::after {
+  content: " *";
+  color: #ef4444;
+  font-weight: bold;
+  margin-left: 0.25rem;
+}
+
 @media (max-width: 520px) {
   .hero-actions button {
     flex: 1 1 100%;
