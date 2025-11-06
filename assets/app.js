@@ -1,5 +1,10 @@
+// Page elements
+const homePage = document.getElementById('homePage');
+const loginPage = document.getElementById('loginPage');
+const signupPage = document.getElementById('signupPage');
+const appPage = document.getElementById('appPage');
+
 const themeToggleBtn = document.getElementById('themeToggle');
-const instructionsSection = document.getElementById('instructions');
 const setManagerSection = document.getElementById('setManager');
 const setEditorSection = document.getElementById('setEditor');
 const setEditorTitle = document.getElementById('setEditorTitle');
@@ -21,25 +26,23 @@ const importSetInput = document.getElementById('importSetInput');
 const setsList = document.getElementById('setsList');
 const downloadExampleBtn = document.getElementById('downloadExample');
 
-const accountStatus = document.getElementById('accountStatus');
+const loginStatus = document.getElementById('loginStatus');
+const signupStatus = document.getElementById('signupStatus');
 const signUpForm = document.getElementById('signUpForm');
 const signUpEmailInput = document.getElementById('signUpEmail');
 const signUpPasswordInput = document.getElementById('signUpPassword');
 const logInForm = document.getElementById('logInForm');
 const logInEmailInput = document.getElementById('logInEmail');
 const logInPasswordInput = document.getElementById('logInPassword');
-const showSignUpBtn = document.getElementById('showSignUp');
-const showLogInBtn = document.getElementById('showLogIn');
-const logoutButton = document.getElementById('logoutButton');
+const switchToSignUpBtn = document.getElementById('switchToSignUp');
+const switchToLogInBtn = document.getElementById('switchToLogIn');
 
-const accountSection = document.getElementById('accountSection');
-const accountCard = document.querySelector('.account-card');
 const topAccountStatus = document.getElementById('topAccountStatus');
 const topSignUpBtn = document.getElementById('topSignUpButton');
 const topLogInBtn = document.getElementById('topLogInButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
-const heroBrowseSetsBtn = document.getElementById('heroBrowseSets');
+const brandLink = document.getElementById('brandLink');
 
 const studySection = document.getElementById('study');
 const studySetTitle = document.getElementById('studySetTitle');
@@ -81,6 +84,37 @@ let pendingSharedSet = null;
 let legacySets = [];
 let legacySetsPrompted = false;
 
+// Page navigation
+function navigateTo(page) {
+  homePage?.classList.add('hidden');
+  loginPage?.classList.add('hidden');
+  signupPage?.classList.add('hidden');
+  appPage?.classList.add('hidden');
+  
+  if (page === 'home') {
+    homePage?.classList.remove('hidden');
+    window.history.pushState({ page: 'home' }, '', '/');
+  } else if (page === 'login') {
+    loginPage?.classList.remove('hidden');
+    window.history.pushState({ page: 'login' }, '', '/#login');
+    setTimeout(() => logInEmailInput?.focus(), 100);
+  } else if (page === 'signup') {
+    signupPage?.classList.remove('hidden');
+    window.history.pushState({ page: 'signup' }, '', '/#signup');
+    setTimeout(() => signUpEmailInput?.focus(), 100);
+  } else if (page === 'app') {
+    appPage?.classList.remove('hidden');
+    window.history.pushState({ page: 'app' }, '', '/#app');
+  }
+}
+
+function handlePopState(event) {
+  const page = event.state?.page || 'home';
+  navigateTo(page);
+}
+
+window.addEventListener('popstate', handlePopState);
+
 const storedTheme = localStorage.getItem('flashcard-studio-theme');
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
 applyTheme(initialTheme);
@@ -91,12 +125,47 @@ themeToggleBtn?.addEventListener('click', () => {
   localStorage.setItem('flashcard-studio-theme', nextTheme);
 });
 
-heroGetStartedBtn?.addEventListener('click', () => {
-  focusAccountSection('signup');
+brandLink?.addEventListener('click', () => {
+  if (currentUser) {
+    navigateTo('app');
+  } else {
+    navigateTo('home');
+  }
 });
 
-heroBrowseSetsBtn?.addEventListener('click', () => {
-  scrollToSection(setManagerSection);
+brandLink?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    if (currentUser) {
+      navigateTo('app');
+    } else {
+      navigateTo('home');
+    }
+  }
+});
+
+heroGetStartedBtn?.addEventListener('click', () => {
+  if (currentUser) {
+    navigateTo('app');
+  } else {
+    navigateTo('signup');
+  }
+});
+
+topSignUpBtn?.addEventListener('click', () => {
+  navigateTo('signup');
+});
+
+topLogInBtn?.addEventListener('click', () => {
+  navigateTo('login');
+});
+
+switchToSignUpBtn?.addEventListener('click', () => {
+  navigateTo('signup');
+});
+
+switchToLogInBtn?.addEventListener('click', () => {
+  navigateTo('login');
 });
 
 downloadExampleBtn.addEventListener('click', () => {
@@ -116,69 +185,52 @@ downloadExampleBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-showSignUpBtn?.addEventListener('click', () => {
-  toggleAccountForms('signup');
-});
-
-showLogInBtn?.addEventListener('click', () => {
-  toggleAccountForms('login');
-});
-
-topSignUpBtn?.addEventListener('click', () => {
-  focusAccountSection('signup');
-});
-
-topLogInBtn?.addEventListener('click', () => {
-  focusAccountSection('login');
-});
-
-logoutButton?.addEventListener('click', handleSignOut);
 topLogoutBtn?.addEventListener('click', handleSignOut);
 
 signUpForm?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!signUpEmailInput || !signUpPasswordInput) return;
   if (!supabase) {
-    setAccountStatusMessage('Supabase client is not available.', 'error');
+    setSignupStatusMessage('Supabase client is not available.', 'error');
     return;
   }
   const email = signUpEmailInput.value.trim().toLowerCase();
   const password = signUpPasswordInput.value;
   if (!email || !password) {
-    setAccountStatusMessage('Enter an email address and a password with at least 8 characters.', 'error');
+    setSignupStatusMessage('Enter an email address and a password with at least 8 characters.', 'error');
     return;
   }
   if (password.length < 8) {
-    setAccountStatusMessage('Passwords need to be at least 8 characters long.', 'error');
+    setSignupStatusMessage('Passwords need to be at least 8 characters long.', 'error');
     return;
   }
   if (!isValidEmail(email)) {
-    setAccountStatusMessage('Enter a valid email address.', 'error');
+    setSignupStatusMessage('Enter a valid email address.', 'error');
     return;
   }
   try {
-    setAccountFormsDisabled(true);
-    setAccountStatusMessage('Creating your account…', 'info', true);
+    setSignupFormDisabled(true);
+    setSignupStatusMessage('Creating your account…', 'info');
     const { data, error } = await supabase.auth.signUp({
       email,
       password
     });
     if (error) {
-      setAccountStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
+      setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
       return;
     }
     signUpForm.reset();
-    logInForm?.reset();
     if (data?.session) {
-      setAccountStatusMessage('Account created! You are now logged in.', 'success');
+      setSignupStatusMessage('Account created! Redirecting...', 'success');
+      setTimeout(() => navigateTo('app'), 1000);
     } else {
-      setAccountStatusMessage('Account created! Check your email to confirm your address.', 'success');
+      setSignupStatusMessage('Account created! Check your email to confirm your address.', 'success');
     }
   } catch (error) {
     console.error(error);
-    setAccountStatusMessage('Something went wrong while creating your account. Please try again.', 'error');
+    setSignupStatusMessage('Something went wrong while creating your account. Please try again.', 'error');
   } finally {
-    setAccountFormsDisabled(false);
+    setSignupFormDisabled(false);
   }
 });
 
@@ -186,35 +238,36 @@ logInForm?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!logInEmailInput || !logInPasswordInput) return;
   if (!supabase) {
-    setAccountStatusMessage('Supabase client is not available.', 'error');
+    setLoginStatusMessage('Supabase client is not available.', 'error');
     return;
   }
   const email = logInEmailInput.value.trim().toLowerCase();
   const password = logInPasswordInput.value;
   if (!email || !password) {
-    setAccountStatusMessage('Enter your email and password to log in.', 'error');
+    setLoginStatusMessage('Enter your email and password to log in.', 'error');
     return;
   }
   try {
-    setAccountFormsDisabled(true);
-    setAccountStatusMessage('Signing you in…', 'info', true);
+    setLoginFormDisabled(true);
+    setLoginStatusMessage('Signing you in…', 'info');
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     if (error) {
-      setAccountStatusMessage(error.message || 'Could not log you in. Please try again.', 'error');
+      setLoginStatusMessage(error.message || 'Could not log you in. Please try again.', 'error');
       return;
     }
     logInForm.reset();
     if (data?.session) {
-      setAccountStatusMessage('Welcome back! Your sets are ready.', 'success');
+      setLoginStatusMessage('Welcome back! Redirecting...', 'success');
+      setTimeout(() => navigateTo('app'), 1000);
     }
   } catch (error) {
     console.error(error);
-    setAccountStatusMessage('Could not log you in. Please try again.', 'error');
+    setLoginStatusMessage('Could not log you in. Please try again.', 'error');
   } finally {
-    setAccountFormsDisabled(false);
+    setLoginFormDisabled(false);
   }
 });
 
@@ -297,10 +350,9 @@ setsList.addEventListener('click', async event => {
       try {
         await deleteSetFromDatabase(setId);
         await refreshSetsFromDatabase();
-        setAccountStatusMessage(`Deleted "${set.name}".`, 'success');
       } catch (error) {
         console.error('Could not delete set', error);
-        setAccountStatusMessage('Could not delete that set. Please try again.', 'error');
+        alert('Could not delete that set. Please try again.');
       }
     }
   }
@@ -454,7 +506,7 @@ saveSetBtn.addEventListener('click', async () => {
     setAccountStatusMessage(`Saved "${setToSave.name}".`, 'success');
   } catch (error) {
     console.error('Could not save set', error);
-    setAccountStatusMessage('Could not save your set. Please try again.', 'error');
+    alert('Could not save your set. Please try again.');
   }
 });
 
@@ -535,9 +587,6 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
     renderSetsList();
     return;
   }
-  if (showLoader) {
-    setAccountStatusMessage('Loading your sets…', 'info', false);
-  }
   try {
     const { data, error } = await supabase
       .from('flashcard_sets')
@@ -570,7 +619,6 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
     console.error('Could not load sets', error);
     sets = [];
     renderSetsList();
-    setAccountStatusMessage('Could not load your sets from Supabase. Please refresh and try again.', 'error');
   }
 }
 
@@ -588,9 +636,6 @@ async function saveSetToDatabase(setToSave, { silent = false } = {}) {
   };
   const { error } = await supabase.from('flashcard_sets').upsert(payload, { onConflict: 'id' });
   if (error) {
-    if (!silent) {
-      setAccountStatusMessage(error.message || 'Could not save your set.', 'error');
-    }
     throw error;
   }
 }
@@ -607,7 +652,7 @@ async function deleteSetFromDatabase(setId) {
 
 function renderSetsList() {
   if (!currentUser) {
-    setsList.innerHTML = '<div class="empty-state">Log in or create an account to build and study sets.</div>';
+    setsList.innerHTML = '<div class="empty-state">Please log in to view your sets.</div>';
     return;
   }
   if (!sets.length) {
@@ -639,30 +684,37 @@ function renderSetsList() {
 
 async function handleSignOut() {
   if (!supabase) {
-    setAccountStatusMessage('Supabase client is not available.', 'error');
     return;
   }
-  setAccountFormsDisabled(true);
-  setAccountStatusMessage('Signing you out…', 'info', true);
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw error;
     }
+    navigateTo('home');
   } catch (error) {
     console.error('Could not sign out', error);
-    setAccountStatusMessage('Could not log you out. Please try again.', 'error');
-  } finally {
-    setAccountFormsDisabled(false);
   }
 }
 
 async function initializeAccountState() {
   loadLegacySetsFromLocalStorage();
   restorePendingShareFromStorage();
-  renderAccountUi();
+  
+  // Check URL hash for initial page
+  const hash = window.location.hash.slice(1);
+  if (hash === 'login') {
+    navigateTo('login');
+  } else if (hash === 'signup') {
+    navigateTo('signup');
+  } else if (hash === 'app') {
+    navigateTo('app');
+  } else {
+    navigateTo('home');
+  }
+  
   if (!supabase) {
-    setAccountStatusMessage('Supabase client could not be initialised.', 'error');
+    console.error('Supabase client could not be initialised.');
     return;
   }
   try {
@@ -676,7 +728,6 @@ async function initializeAccountState() {
     await handleAuthChange(session);
   } catch (error) {
     console.error('Could not initialise auth state', error);
-    setAccountStatusMessage('Could not connect to Supabase. Please refresh the page.', 'error');
   }
   supabase.auth.onAuthStateChange(async (_event, session) => {
     await handleAuthChange(session);
@@ -688,13 +739,18 @@ async function handleAuthChange(session) {
   currentSession = session;
   currentUser = session?.user ?? null;
   legacySetsPrompted = false;
-  renderAccountUi();
+  updateTopBar();
+  
   if (!currentUser) {
     sets = [];
     renderSetsList();
     return;
   }
-  await refreshSetsFromDatabase({ showLoader: true });
+  
+  // User logged in, navigate to app
+  navigateTo('app');
+  
+  await refreshSetsFromDatabase();
   const importedLegacy = await adoptLegacySetsIfAvailable();
   if (!importedLegacy) {
     await handlePendingSharedImport();
@@ -704,149 +760,53 @@ async function handleAuthChange(session) {
   }
 }
 
-function renderAccountUi() {
-  if (!showSignUpBtn || !showLogInBtn || !logoutButton) {
-    return;
-  }
+function updateTopBar() {
   if (currentUser) {
-    logoutButton.classList.remove('hidden');
-    showSignUpBtn.classList.add('hidden');
-    showLogInBtn.classList.add('hidden');
     topLogoutBtn?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
-    setTopAuthMode(null);
-    signUpForm?.classList.add('hidden');
-    logInForm?.classList.add('hidden');
-    updateTopAccountSummary('authenticated', `Signed in as ${currentUser.email}`);
-    if (accountStatus?.dataset.locked !== 'true') {
-      setAccountStatusMessage(`Logged in as ${currentUser.email}`, 'success', false);
+    if (topAccountStatus) {
+      topAccountStatus.textContent = `Signed in as ${currentUser.email}`;
+      topAccountStatus.dataset.state = 'authenticated';
     }
   } else {
-    logoutButton.classList.add('hidden');
     topLogoutBtn?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
-    const signupVisible = !signUpForm?.classList.contains('hidden');
-    showSignUpBtn.classList.toggle('hidden', signupVisible);
-    showLogInBtn.classList.toggle('hidden', !signupVisible);
-    if (signUpForm?.classList.contains('hidden') && logInForm?.classList.contains('hidden')) {
-      toggleAccountForms('login');
-    } else {
-      setTopAuthMode(signupVisible ? 'signup' : 'login');
-    }
-    if (accountStatus?.dataset.locked !== 'true') {
-      setAccountStatusMessage('Log in or sign up to manage your flashcard sets.', 'info', false);
-    } else if (!topAccountStatus?.dataset.state || topAccountStatus.dataset.state === 'authenticated') {
-      updateTopAccountSummary('guest', 'You are browsing as a guest');
+    if (topAccountStatus) {
+      topAccountStatus.textContent = 'You are browsing as a guest';
+      topAccountStatus.dataset.state = 'guest';
     }
   }
 }
 
-function toggleAccountForms(mode) {
-  if (!signUpForm || !logInForm || !showSignUpBtn || !showLogInBtn) {
-    return;
-  }
-  const showSignup = mode === 'signup';
-  if (showSignup) {
-    signUpForm.classList.remove('hidden');
-    logInForm.classList.add('hidden');
-    showSignUpBtn.classList.add('hidden');
-    showLogInBtn.classList.remove('hidden');
-    signUpEmailInput?.focus({ preventScroll: true });
-  } else {
-    logInForm.classList.remove('hidden');
-    signUpForm.classList.add('hidden');
-    showSignUpBtn.classList.remove('hidden');
-    showLogInBtn.classList.add('hidden');
-    logInEmailInput?.focus({ preventScroll: true });
-  }
-  setTopAuthMode(showSignup ? 'signup' : 'login');
-  if (accountStatus?.dataset.locked !== 'true' && !currentUser) {
-    setAccountStatusMessage('Log in or sign up to manage your flashcard sets.', 'info', false);
+function setLoginStatusMessage(message, type = 'info') {
+  if (!loginStatus) return;
+  loginStatus.classList.remove('hidden');
+  loginStatus.textContent = message;
+  loginStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
+  loginStatus.classList.add(`account-status--${type}`);
+}
+
+function setSignupStatusMessage(message, type = 'info') {
+  if (!signupStatus) return;
+  signupStatus.classList.remove('hidden');
+  signupStatus.textContent = message;
+  signupStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
+  signupStatus.classList.add(`account-status--${type}`);
+}
+
+function setLoginFormDisabled(disabled) {
+  if (logInForm) {
+    const elements = logInForm.querySelectorAll('input, button');
+    elements.forEach(el => el.disabled = disabled);
   }
 }
 
-function setTopAuthMode(mode) {
-  if (topSignUpBtn) {
-    const isSignup = mode === 'signup';
-    topSignUpBtn.classList.toggle('is-active', isSignup);
-    topSignUpBtn.setAttribute('aria-pressed', isSignup ? 'true' : 'false');
-  }
-  if (topLogInBtn) {
-    const isLogin = mode === 'login';
-    topLogInBtn.classList.toggle('is-active', isLogin);
-    topLogInBtn.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
-  }
-}
-
-function updateTopAccountSummary(state, message) {
-  if (!topAccountStatus) {
-    return;
-  }
-  topAccountStatus.textContent = message;
-  topAccountStatus.dataset.state = state;
-}
-
-function scrollToSection(section) {
-  if (!section) return;
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function focusAccountSection(mode = 'login') {
-  scrollToSection(accountSection);
-  toggleAccountForms(mode);
-  const focusTarget = mode === 'signup' ? signUpEmailInput : logInEmailInput;
-  if (focusTarget) {
-    setTimeout(() => {
-      focusTarget.focus({ preventScroll: true });
-    }, 250);
-  }
-}
-
-function setAccountStatusMessage(message, type = 'info', lock = type !== 'info') {
-  if (!accountStatus) return;
-  accountStatus.textContent = message;
-  accountStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
-  accountStatus.classList.add(`account-status--${type}`);
-  accountStatus.dataset.locked = lock ? 'true' : 'false';
-  if (lock) {
-    updateTopAccountSummary(type, message);
-  } else if (currentUser) {
-    updateTopAccountSummary('authenticated', `Signed in as ${currentUser.email}`);
-  } else {
-    updateTopAccountSummary('guest', 'You are browsing as a guest');
-  }
-}
-
-function setAccountFormsDisabled(disabled) {
-  if (accountSection) {
-    accountSection.setAttribute('aria-busy', disabled ? 'true' : 'false');
-  }
-  if (accountCard) {
-    const interactiveElements = accountCard.querySelectorAll('input, button');
-    interactiveElements.forEach(element => {
-      element.disabled = disabled;
-    });
-    accountCard.classList.toggle('is-loading', disabled);
-  }
-  if (topSignUpBtn) {
-    topSignUpBtn.disabled = disabled;
-  }
-  if (topLogInBtn) {
-    topLogInBtn.disabled = disabled;
-  }
-  if (topLogoutBtn) {
-    topLogoutBtn.disabled = disabled;
-  }
-  if (showSignUpBtn) {
-    showSignUpBtn.disabled = disabled;
-  }
-  if (showLogInBtn) {
-    showLogInBtn.disabled = disabled;
-  }
-  if (logoutButton) {
-    logoutButton.disabled = disabled;
+function setSignupFormDisabled(disabled) {
+  if (signUpForm) {
+    const elements = signUpForm.querySelectorAll('input, button');
+    elements.forEach(el => el.disabled = disabled);
   }
 }
 
@@ -854,8 +814,8 @@ function requireAccount(actionDescription) {
   if (currentUser) {
     return true;
   }
-  setAccountStatusMessage(`Log in to ${actionDescription}.`, 'error');
-  toggleAccountForms('login');
+  alert(`Please log in to ${actionDescription}.`);
+  navigateTo('login');
   return false;
 }
 
@@ -886,12 +846,11 @@ async function adoptLegacySetsIfAvailable() {
     }
     legacySets = [];
     localStorage.removeItem(storageKey);
-    setAccountStatusMessage('Imported your locally saved sets into your account.', 'success');
     await refreshSetsFromDatabase();
     return true;
   } catch (error) {
     console.error('Could not import legacy sets', error);
-    setAccountStatusMessage('Could not import your locally saved sets. Please try again.', 'error');
+    alert('Could not import your locally saved sets. Please try again.');
     return false;
   }
 }
@@ -936,11 +895,11 @@ async function handlePendingSharedImport() {
   try {
     await saveSetToDatabase(preparedSet);
     await refreshSetsFromDatabase();
-    setAccountStatusMessage(`Added "${preparedSet.name}" to your sets.`, 'success');
+    alert(`Added "${preparedSet.name}" to your sets.`);
     return true;
   } catch (error) {
     console.error('Could not import shared set', error);
-    setAccountStatusMessage('Could not add that shared set to your account. Please try again.', 'error');
+    alert('Could not add that shared set to your account. Please try again.');
     return false;
   }
 }
@@ -961,8 +920,8 @@ async function handleShareLinkFromUrl() {
     if (currentUser) {
       await handlePendingSharedImport();
     } else {
-      setAccountStatusMessage('Log in to add the shared set to your account.', 'info', true);
-      toggleAccountForms('login');
+      alert('Please log in to add the shared set to your account.');
+      navigateTo('login');
     }
   } catch (error) {
     console.error('Could not import shared set', error);
@@ -985,7 +944,7 @@ function copyShareLink(setId) {
     navigator.clipboard
       .writeText(shareUrl)
       .then(() => {
-        setAccountStatusMessage('Share link copied to your clipboard.', 'success');
+        alert('Share link copied to your clipboard.');
       })
       .catch(() => {
         prompt('Copy this link to share your set:', shareUrl);
@@ -1010,7 +969,6 @@ function exportSetToCsv(setId) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  setAccountStatusMessage(`Exported "${set.name}" as a CSV.`, 'success');
 }
 
 function createCsvFromSet(set) {
@@ -1185,7 +1143,6 @@ function openSetEditor(mode, baseSet) {
   renderColumnList();
   renderCardsTable();
   setEditorTitle.textContent = mode === 'edit' ? 'Edit set' : 'Create a set';
-  instructionsSection.classList.add('hidden');
   setManagerSection.classList.add('hidden');
   studySection.classList.add('hidden');
   setEditorSection.classList.remove('hidden');
@@ -1196,7 +1153,6 @@ function closeSetEditor() {
   editorState = null;
   setEditorSection.classList.add('hidden');
   studySection.classList.add('hidden');
-  instructionsSection.classList.remove('hidden');
   setManagerSection.classList.remove('hidden');
 }
 
@@ -1277,7 +1233,6 @@ function startStudyWithSet(setId) {
   originalDeck = set.cards.map(card => ({ id: card.id, data: { ...card.data } }));
   resetDeck();
   prepareNextCard();
-  instructionsSection.classList.add('hidden');
   setManagerSection.classList.add('hidden');
   setEditorSection.classList.add('hidden');
   studySection.classList.remove('hidden');
@@ -1337,7 +1292,6 @@ function exitStudy() {
   resetStudyState();
   studySection.classList.add('hidden');
   setEditorSection.classList.add('hidden');
-  instructionsSection.classList.remove('hidden');
   setManagerSection.classList.remove('hidden');
 }
 
