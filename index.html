@@ -20,10 +20,51 @@
       </p>
     </header>
 
+    <section id="accountSection" aria-live="polite">
+      <div class="section-header">
+        <h2>1. Create an account</h2>
+        <p>Sign up or log in so your sets stay with you across browsers and devices.</p>
+      </div>
+      <div class="account-card">
+        <div id="accountStatus" class="account-status" role="status"></div>
+        <form id="signUpForm" class="account-form hidden">
+          <div class="flex-row">
+            <label>
+              Email
+              <input id="signUpEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+            </label>
+            <label>
+              Password
+              <input id="signUpPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
+            </label>
+          </div>
+          <button type="submit">Create account</button>
+        </form>
+        <form id="logInForm" class="account-form">
+          <div class="flex-row">
+            <label>
+              Email
+              <input id="logInEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+            </label>
+            <label>
+              Password
+              <input id="logInPassword" type="password" autocomplete="current-password" placeholder="Your password" required />
+            </label>
+          </div>
+          <button type="submit">Log in</button>
+        </form>
+        <div class="account-actions">
+          <button id="showSignUp" type="button">Create an account</button>
+          <button id="showLogIn" type="button" class="hidden">I already have an account</button>
+          <button id="logoutButton" type="button" class="secondary hidden">Log out</button>
+        </div>
+      </div>
+    </section>
+
     <section id="instructions">
       <div class="section-header">
-        <h2>1. Get started</h2>
-        <p>Use the set manager below to create cards from scratch or import existing CSV decks. Everything stays on your device.</p>
+        <h2>2. Get started</h2>
+        <p>Use the set manager below to create cards from scratch or import existing CSV decks. Sets are tied to your account.</p>
       </div>
       <ul>
         <li>Create a set with the visual creator, customise the fields you need, and add cards one by one.</li>
@@ -35,8 +76,8 @@
 
     <section id="setManager">
       <div class="section-header">
-        <h2>2. Manage your sets</h2>
-        <p>Build sets with the creator, import CSV decks, or edit the ones you've already made.</p>
+        <h2>3. Manage your sets</h2>
+        <p>Build sets with the creator, import CSV decks, share links, or edit the ones you've already made.</p>
       </div>
       <div class="set-controls">
         <button id="createSetButton">Create a set</button>
@@ -130,7 +171,7 @@
   </main>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.2.0</div>
+  <div class="version-badge" aria-label="Version">v1.3.0</div>
 
   <script src="assets/app.js" defer></script>
 </body>
