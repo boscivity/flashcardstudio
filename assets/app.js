@@ -637,7 +637,8 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
         )
       : [];
     if (!fetchedSets.length && !starterSetCreated) {
-      // Only try to create starter set once per session
+      // Only try to create starter set once per session to prevent infinite loops
+      // Flag resets on auth change (logout/login) or page refresh to allow retry
       starterSetCreated = true;
       try {
         const starterSet = createStarterSet();
@@ -646,6 +647,7 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
       } catch (starterError) {
         console.error('Could not create starter set', starterError);
         // Don't show error to user, just leave sets empty
+        // User can refresh page or create their own set
         sets = [];
       }
     } else {
@@ -923,7 +925,7 @@ async function adoptLegacySetsIfAvailable() {
     // Clear legacy sets even on error to prevent repeated prompts
     legacySets = [];
     localStorage.removeItem(storageKey);
-    alert('Could not import your locally saved sets. Please try again later.');
+    alert('Could not import your locally saved sets. The data has been cleared from this device.');
     return false;
   }
 }
