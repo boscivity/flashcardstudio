@@ -222,8 +222,14 @@ changePasswordForm?.addEventListener('submit', async event => {
     return;
   }
   
+  const currentPassword = currentPasswordInput.value;
   const newPassword = newPasswordInput.value;
   const confirmPassword = confirmPasswordInput.value;
+  
+  if (!currentPassword) {
+    setSettingsStatusMessage('Please enter your current password.', 'error');
+    return;
+  }
   
   if (newPassword.length < 8) {
     setSettingsStatusMessage('New password must be at least 8 characters long.', 'error');
@@ -239,6 +245,18 @@ changePasswordForm?.addEventListener('submit', async event => {
     setPasswordFormDisabled(true);
     setSettingsStatusMessage('Updating your password…', 'info');
     
+    // First verify current password by attempting to sign in
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: currentUser.email,
+      password: currentPassword
+    });
+    
+    if (verifyError) {
+      setSettingsStatusMessage('Current password is incorrect.', 'error');
+      return;
+    }
+    
+    // Now update the password
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     });
