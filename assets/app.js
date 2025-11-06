@@ -503,7 +503,6 @@ saveSetBtn.addEventListener('click', async () => {
     await saveSetToDatabase(setToSave);
     await refreshSetsFromDatabase();
     closeSetEditor();
-    setAccountStatusMessage(`Saved "${setToSave.name}".`, 'success');
   } catch (error) {
     console.error('Could not save set', error);
     alert('Could not save your set. Please try again.');
