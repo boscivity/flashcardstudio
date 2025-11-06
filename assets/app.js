@@ -21,6 +21,17 @@ const importSetInput = document.getElementById('importSetInput');
 const setsList = document.getElementById('setsList');
 const downloadExampleBtn = document.getElementById('downloadExample');
 
+const accountStatus = document.getElementById('accountStatus');
+const signUpForm = document.getElementById('signUpForm');
+const signUpEmailInput = document.getElementById('signUpEmail');
+const signUpPasswordInput = document.getElementById('signUpPassword');
+const logInForm = document.getElementById('logInForm');
+const logInEmailInput = document.getElementById('logInEmail');
+const logInPasswordInput = document.getElementById('logInPassword');
+const showSignUpBtn = document.getElementById('showSignUp');
+const showLogInBtn = document.getElementById('showLogIn');
+const logoutButton = document.getElementById('logoutButton');
+
 const studySection = document.getElementById('study');
 const studySetTitle = document.getElementById('studySetTitle');
 const backButton = document.getElementById('backButton');
@@ -38,6 +49,9 @@ const confettiContainer = document.getElementById('confettiContainer');
 const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
 
 const storageKey = 'flashcardStudioSets';
+const usersStorageKey = 'flashcardStudioUsers';
+const currentUserStorageKey = 'flashcardStudioCurrentUser';
+const pendingShareStorageKey = 'flashcardStudioPendingShare';
 
 let sets = [];
 let editorState = null;
@@ -48,6 +62,13 @@ let activeTemplates = { front: '', back: '', hint: '' };
 let originalDeck = [];
 let deck = [];
 let currentCard = null;
+
+let users = [];
+let currentUserId = null;
+let currentUser = null;
+let pendingSharedSet = null;
+let legacySets = [];
+let legacySetsPrompted = false;
 
 const storedTheme = localStorage.getItem('flashcard-studio-theme');
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
@@ -76,15 +97,107 @@ downloadExampleBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+showSignUpBtn?.addEventListener('click', () => {
+  toggleAccountForms('signup');
+});
+
+showLogInBtn?.addEventListener('click', () => {
+  toggleAccountForms('login');
+});
+
+logoutButton?.addEventListener('click', () => {
+  logOutCurrentUser();
+});
+
+signUpForm?.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!signUpEmailInput || !signUpPasswordInput) return;
+  const email = signUpEmailInput.value.trim().toLowerCase();
+  const password = signUpPasswordInput.value;
+  if (!email || !password) {
+    setAccountStatusMessage('Enter an email address and a password with at least 8 characters.', 'error');
+    return;
+  }
+  if (password.length < 8) {
+    setAccountStatusMessage('Passwords need to be at least 8 characters long.', 'error');
+    return;
+  }
+  if (!isValidEmail(email)) {
+    setAccountStatusMessage('Enter a valid email address.', 'error');
+    return;
+  }
+  if (users.some(user => user.email === email)) {
+    setAccountStatusMessage('That email is already registered. Try logging in instead.', 'error');
+    return;
+  }
+  try {
+    const passwordHash = await hashPassword(password);
+    const newUser = {
+      id: generateUserId(),
+      email,
+      passwordHash,
+      sets: []
+    };
+    users.push(newUser);
+    saveUsersToStorage();
+    const result = await setCurrentUser(newUser.id);
+    signUpForm.reset();
+    logInForm?.reset();
+    if (!result.importedLegacy && !result.importedShared) {
+      setAccountStatusMessage('Account created! You are now logged in.', 'success');
+    }
+  } catch (error) {
+    console.error(error);
+    setAccountStatusMessage('Something went wrong while creating your account. Please try again.', 'error');
+  }
+});
+
+logInForm?.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!logInEmailInput || !logInPasswordInput) return;
+  const email = logInEmailInput.value.trim().toLowerCase();
+  const password = logInPasswordInput.value;
+  if (!email || !password) {
+    setAccountStatusMessage('Enter your email and password to log in.', 'error');
+    return;
+  }
+  const user = users.find(candidate => candidate.email === email);
+  if (!user) {
+    setAccountStatusMessage('No account found with that email address. Try signing up.', 'error');
+    return;
+  }
+  try {
+    const passwordHash = await hashPassword(password);
+    if (passwordHash !== user.passwordHash) {
+      setAccountStatusMessage('Incorrect password. Please try again.', 'error');
+      return;
+    }
+    const result = await setCurrentUser(user.id);
+    logInForm.reset();
+    if (!result.importedLegacy && !result.importedShared) {
+      setAccountStatusMessage('Welcome back! Your sets are ready.', 'success');
+    }
+  } catch (error) {
+    console.error(error);
+    setAccountStatusMessage('Could not log you in. Please try again.', 'error');
+  }
+});
+
 createSetBtn.addEventListener('click', () => {
+  if (!requireAccount('create sets')) return;
   openSetEditor('create');
 });
 
 importSetBtn.addEventListener('click', () => {
+  if (!requireAccount('import sets')) return;
   importSetInput.click();
 });
 
 importSetInput.addEventListener('change', event => {
+  if (!requireAccount('import sets')) {
+    importSetInput.value = '';
+    return;
+  }
   const file = event.target.files?.[0];
   importSetInput.value = '';
   if (!file) {
@@ -125,6 +238,7 @@ importSetInput.addEventListener('change', event => {
 });
 
 setsList.addEventListener('click', event => {
+  if (!requireAccount('manage your sets')) return;
   const button = event.target.closest('button[data-action]');
   if (!button) return;
   const action = button.dataset.action;
@@ -137,6 +251,10 @@ setsList.addEventListener('click', event => {
     if (set) {
       openSetEditor('edit', set);
     }
+  } else if (action === 'share') {
+    copyShareLink(setId);
+  } else if (action === 'export') {
+    exportSetToCsv(setId);
   } else if (action === 'delete') {
     const set = sets.find(s => s.id === setId);
     if (!set) return;
@@ -365,68 +483,46 @@ document.addEventListener('keydown', event => {
     }
   }
 });
-
-loadSetsFromStorage();
-renderSetsList();
+initializeAccountState();
 
 function loadSetsFromStorage() {
-  try {
-    const raw = localStorage.getItem(storageKey);
-    sets = raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    console.warn('Could not load saved sets', error);
+  if (!currentUser) {
     sets = [];
+    return;
   }
-  if (!Array.isArray(sets)) {
-    sets = [];
-  }
+  const storedSets = Array.isArray(currentUser.sets) ? currentUser.sets : [];
+  sets = storedSets.map(cloneSetForEditing);
   if (!sets.length) {
-    const starterSet = {
-      id: generateId(),
-      name: 'Starter deck',
-      columns: ['Term', 'Definition', 'Hint'],
-      cards: [
-        {
-          id: generateCardId(),
-          data: {
-            Term: 'Photosynthesis',
-            Definition: 'Process plants use to convert light into energy.',
-            Hint: 'Chlorophyll, sunlight'
-          }
-        },
-        {
-          id: generateCardId(),
-          data: {
-            Term: 'Mitochondria',
-            Definition: 'The powerhouse of the cell.',
-            Hint: 'Organelle'
-          }
-        }
-      ],
-      templates: {
-        front: '{{Term}}',
-        back: '{{Definition}}',
-        hint: '{{Hint}}'
-      }
-    };
+    const starterSet = createStarterSet();
     sets.push(starterSet);
     saveSets();
   }
 }
 
 function saveSets() {
-  localStorage.setItem(storageKey, JSON.stringify(sets));
+  if (!currentUser) {
+    localStorage.setItem(storageKey, JSON.stringify(sets));
+    return;
+  }
+  currentUser.sets = sets.map(cloneSetForStorage);
+  saveUsersToStorage();
+  localStorage.removeItem(storageKey);
 }
 
 function renderSetsList() {
+  if (!currentUser) {
+    setsList.innerHTML = '<div class="empty-state">Log in or create an account to build and study sets.</div>';
+    return;
+  }
   if (!sets.length) {
     setsList.innerHTML = '<div class="empty-state">No sets yet. Create one or import a CSV to get started.</div>';
     return;
   }
-  setsList.innerHTML = sets.map(set => {
-    const cardCount = set.cards.length;
-    const cardLabel = cardCount === 1 ? 'card' : 'cards';
-    return `
+  setsList.innerHTML = sets
+    .map(set => {
+      const cardCount = set.cards.length;
+      const cardLabel = cardCount === 1 ? 'card' : 'cards';
+      return `
       <div class="set-card">
         <div class="set-card__header">
           <h3>${escapeHtml(set.name)}</h3>
@@ -435,11 +531,479 @@ function renderSetsList() {
         <div class="set-card__actions">
           <button data-action="study" data-id="${set.id}">Study</button>
           <button data-action="edit" data-id="${set.id}" class="secondary">Edit</button>
+          <button data-action="share" data-id="${set.id}" class="secondary">Copy share link</button>
+          <button data-action="export" data-id="${set.id}" class="secondary">Export CSV</button>
           <button data-action="delete" data-id="${set.id}" class="secondary danger">Delete</button>
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
+}
+
+function initializeAccountState() {
+  loadUsersFromStorage();
+  loadCurrentUserFromStorage();
+  loadLegacySetsFromLocalStorage();
+  restorePendingShareFromStorage();
+  renderAccountUi();
+  loadSetsFromStorage();
+  const importedLegacy = adoptLegacySetsIfAvailable();
+  if (!importedLegacy) {
+    renderSetsList();
+  }
+  handlePendingSharedImport();
+  handleShareLinkFromUrl();
+}
+
+function renderAccountUi() {
+  if (!showSignUpBtn || !showLogInBtn || !logoutButton) {
+    return;
+  }
+  if (currentUser) {
+    logoutButton.classList.remove('hidden');
+    showSignUpBtn.classList.add('hidden');
+    showLogInBtn.classList.add('hidden');
+    signUpForm?.classList.add('hidden');
+    logInForm?.classList.add('hidden');
+    if (accountStatus?.dataset.locked !== 'true') {
+      setAccountStatusMessage(`Logged in as ${currentUser.email}`, 'success', false);
+    }
+  } else {
+    logoutButton.classList.add('hidden');
+    showSignUpBtn.classList.remove('hidden');
+    if (signUpForm?.classList.contains('hidden')) {
+      showLogInBtn.classList.add('hidden');
+    } else {
+      showLogInBtn.classList.remove('hidden');
+    }
+    if (signUpForm?.classList.contains('hidden') && logInForm?.classList.contains('hidden')) {
+      toggleAccountForms('login');
+    }
+    if (accountStatus?.dataset.locked !== 'true') {
+      setAccountStatusMessage('Log in or sign up to manage your flashcard sets.', 'info', false);
+    }
+  }
+}
+
+function toggleAccountForms(mode) {
+  if (!signUpForm || !logInForm || !showSignUpBtn || !showLogInBtn) {
+    return;
+  }
+  if (mode === 'signup') {
+    signUpForm.classList.remove('hidden');
+    logInForm.classList.add('hidden');
+    showSignUpBtn.classList.add('hidden');
+    showLogInBtn.classList.remove('hidden');
+    signUpEmailInput?.focus();
+  } else {
+    logInForm.classList.remove('hidden');
+    signUpForm.classList.add('hidden');
+    showSignUpBtn.classList.remove('hidden');
+    showLogInBtn.classList.add('hidden');
+    logInEmailInput?.focus();
+  }
+  if (accountStatus?.dataset.locked !== 'true' && !currentUser) {
+    setAccountStatusMessage('Log in or sign up to manage your flashcard sets.', 'info', false);
+  }
+}
+
+function setAccountStatusMessage(message, type = 'info', lock = type !== 'info') {
+  if (!accountStatus) return;
+  accountStatus.textContent = message;
+  accountStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
+  accountStatus.classList.add(`account-status--${type}`);
+  accountStatus.dataset.locked = lock ? 'true' : 'false';
+}
+
+function requireAccount(actionDescription) {
+  if (currentUser) {
+    return true;
+  }
+  setAccountStatusMessage(`Log in to ${actionDescription}.`, 'error');
+  toggleAccountForms('login');
+  return false;
+}
+
+function logOutCurrentUser() {
+  currentUserId = null;
+  currentUser = null;
+  sets = [];
+  saveCurrentUserId();
+  renderAccountUi();
+  renderSetsList();
+  setAccountStatusMessage('You are logged out. Log in or create an account to continue.', 'info', false);
+}
+
+function loadUsersFromStorage() {
+  try {
+    const raw = localStorage.getItem(usersStorageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    users = Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Could not load users', error);
+    users = [];
+  }
+}
+
+function loadCurrentUserFromStorage() {
+  currentUserId = localStorage.getItem(currentUserStorageKey);
+  currentUser = currentUserId ? users.find(user => user.id === currentUserId) || null : null;
+  if (!currentUser) {
+    currentUserId = null;
+  }
+}
+
+function saveCurrentUserId() {
+  if (currentUserId) {
+    localStorage.setItem(currentUserStorageKey, currentUserId);
+  } else {
+    localStorage.removeItem(currentUserStorageKey);
+  }
+}
+
+function saveUsersToStorage() {
+  localStorage.setItem(usersStorageKey, JSON.stringify(users));
+  saveCurrentUserId();
+}
+
+async function setCurrentUser(userId) {
+  currentUserId = userId;
+  currentUser = users.find(user => user.id === userId) || null;
+  saveCurrentUserId();
+  renderAccountUi();
+  loadSetsFromStorage();
+  const importedLegacy = adoptLegacySetsIfAvailable();
+  if (!importedLegacy) {
+    renderSetsList();
+  }
+  const importedShared = handlePendingSharedImport();
+  return { importedLegacy, importedShared };
+}
+
+function loadLegacySetsFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    legacySets = Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Could not load legacy sets', error);
+    legacySets = [];
+  }
+}
+
+function adoptLegacySetsIfAvailable() {
+  if (!currentUser || !legacySets.length || legacySetsPrompted) {
+    return false;
+  }
+  legacySetsPrompted = true;
+  const shouldImport = confirm('We found sets saved on this device. Do you want to add them to your account?');
+  if (!shouldImport) {
+    return false;
+  }
+  const normalisedSets = legacySets.map(set => cloneSetForEditing(set));
+  sets = normalisedSets;
+  saveSets();
+  legacySets = [];
+  localStorage.removeItem(storageKey);
+  setAccountStatusMessage('Imported your locally saved sets into your account.', 'success');
+  renderSetsList();
+  return true;
+}
+
+function restorePendingShareFromStorage() {
+  try {
+    const raw = localStorage.getItem(pendingShareStorageKey);
+    pendingSharedSet = raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.warn('Could not restore pending shared set', error);
+    pendingSharedSet = null;
+  }
+}
+
+function storePendingSharedSet(payload) {
+  pendingSharedSet = payload;
+  if (!payload) {
+    localStorage.removeItem(pendingShareStorageKey);
+  } else {
+    localStorage.setItem(pendingShareStorageKey, JSON.stringify(payload));
+  }
+}
+
+function clearPendingSharedSet() {
+  pendingSharedSet = null;
+  localStorage.removeItem(pendingShareStorageKey);
+}
+
+function handlePendingSharedImport() {
+  if (!currentUser || !pendingSharedSet) {
+    return false;
+  }
+  const preparedSet = prepareSharedSet(pendingSharedSet);
+  clearPendingSharedSet();
+  if (!preparedSet) {
+    return false;
+  }
+  const shouldImport = confirm(`Add "${preparedSet.name}" to your sets?`);
+  if (!shouldImport) {
+    return false;
+  }
+  sets.push(preparedSet);
+  saveSets();
+  renderSetsList();
+  setAccountStatusMessage(`Added "${preparedSet.name}" to your sets.`, 'success');
+  return true;
+}
+
+function handleShareLinkFromUrl() {
+  const url = new URL(window.location.href);
+  const shareParam = url.searchParams.get('share');
+  if (!shareParam) {
+    return;
+  }
+  url.searchParams.delete('share');
+  const nextUrl = `${url.pathname}${url.search ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
+  window.history.replaceState({}, '', nextUrl);
+  try {
+    const decoded = decodeBase64(shareParam);
+    const payload = JSON.parse(decoded);
+    storePendingSharedSet(payload);
+    if (currentUser) {
+      handlePendingSharedImport();
+    } else {
+      setAccountStatusMessage('Log in to add the shared set to your account.', 'info', true);
+      toggleAccountForms('login');
+    }
+  } catch (error) {
+    console.error('Could not import shared set', error);
+    alert('Could not import that shared set link. It may have expired or been corrupted.');
+  }
+}
+
+function copyShareLink(setId) {
+  const set = sets.find(candidate => candidate.id === setId);
+  if (!set) {
+    return;
+  }
+  const payload = createShareablePayload(set);
+  const encoded = encodeBase64(JSON.stringify(payload));
+  const url = new URL(window.location.href);
+  url.searchParams.delete('share');
+  url.searchParams.set('share', encoded);
+  const shareUrl = url.toString();
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setAccountStatusMessage('Share link copied to your clipboard.', 'success');
+      })
+      .catch(() => {
+        prompt('Copy this link to share your set:', shareUrl);
+      });
+  } else {
+    prompt('Copy this link to share your set:', shareUrl);
+  }
+}
+
+function exportSetToCsv(setId) {
+  const set = sets.find(candidate => candidate.id === setId);
+  if (!set) {
+    return;
+  }
+  const csv = createCsvFromSet(set);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = createFileNameFromSet(set);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  setAccountStatusMessage(`Exported "${set.name}" as a CSV.`, 'success');
+}
+
+function createCsvFromSet(set) {
+  const headers = set.columns.map(column => escapeCsvCell(column));
+  const rows = [headers.join(',')];
+  set.cards.forEach(card => {
+    const row = set.columns.map(column => {
+      const value = card.data?.[column] ?? '';
+      return escapeCsvCell(value);
+    });
+    rows.push(row.join(','));
+  });
+  return rows.join('\n');
+}
+
+function escapeCsvCell(value) {
+  const text = value == null ? '' : String(value);
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function createFileNameFromSet(set) {
+  const base = set.name?.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')?.replace(/^-+|-+$/g, '') || 'flashcard-set';
+  return `${base}.csv`;
+}
+
+function createShareablePayload(set) {
+  return {
+    version: 1,
+    name: set.name,
+    columns: [...set.columns],
+    templates: { ...set.templates },
+    cards: set.cards.map(card => ({ data: { ...card.data } }))
+  };
+}
+
+function prepareSharedSet(payload) {
+  try {
+    const baseSet = normaliseIncomingSet(payload, { fallbackName: payload?.name || 'Shared set', preserveIds: false });
+    return baseSet;
+  } catch (error) {
+    console.error('Could not prepare shared set', error);
+    alert('The shared set could not be loaded.');
+    return null;
+  }
+}
+
+function normaliseIncomingSet(rawSet, { fallbackName = 'Imported set', preserveIds = false } = {}) {
+  const rawColumns = Array.isArray(rawSet?.columns) ? rawSet.columns : [];
+  const columns = rawColumns
+    .map(column => (typeof column === 'string' ? column.trim() : ''))
+    .filter(Boolean);
+  if (!columns.length) {
+    columns.push('Front', 'Back');
+  }
+  const uniqueColumns = [...new Set(columns)];
+  const name = typeof rawSet?.name === 'string' && rawSet.name.trim() ? rawSet.name.trim() : fallbackName;
+  const templates = {
+    front:
+      typeof rawSet?.templates?.front === 'string' && rawSet.templates.front.trim()
+        ? rawSet.templates.front.trim()
+        : `{{${uniqueColumns[0]}}}`,
+    back:
+      typeof rawSet?.templates?.back === 'string' && rawSet.templates.back.trim()
+        ? rawSet.templates.back.trim()
+        : `{{${uniqueColumns[1] || uniqueColumns[0]}}}`,
+    hint: typeof rawSet?.templates?.hint === 'string' ? rawSet.templates.hint : ''
+  };
+  const cardsSource = Array.isArray(rawSet?.cards) ? rawSet.cards : [];
+  const cards = cardsSource.length
+    ? cardsSource.map(card => {
+        const data = {};
+        uniqueColumns.forEach(column => {
+          const sourceValue = card?.data?.[column];
+          data[column] = typeof sourceValue === 'string' ? sourceValue : '';
+        });
+        return {
+          id: preserveIds && typeof card?.id === 'string' ? card.id : generateCardId(),
+          data
+        };
+      })
+    : [createEmptyCard(uniqueColumns)];
+  return {
+    id: preserveIds && typeof rawSet?.id === 'string' ? rawSet.id : generateId(),
+    name,
+    columns: uniqueColumns,
+    cards,
+    templates
+  };
+}
+
+function cloneSetForEditing(set) {
+  return normaliseIncomingSet(set, { fallbackName: set?.name || 'Untitled set', preserveIds: true });
+}
+
+function cloneSetForStorage(set) {
+  return {
+    id: set.id,
+    name: set.name,
+    columns: [...set.columns],
+    cards: set.cards.map(card => ({ id: card.id, data: { ...card.data } })),
+    templates: { ...set.templates }
+  };
+}
+
+function createStarterSet() {
+  return {
+    id: generateId(),
+    name: 'Starter deck',
+    columns: ['Term', 'Definition', 'Hint'],
+    cards: [
+      {
+        id: generateCardId(),
+        data: {
+          Term: 'Photosynthesis',
+          Definition: 'Process plants use to convert light into energy.',
+          Hint: 'Chlorophyll, sunlight'
+        }
+      },
+      {
+        id: generateCardId(),
+        data: {
+          Term: 'Mitochondria',
+          Definition: 'The powerhouse of the cell.',
+          Hint: 'Organelle'
+        }
+      }
+    ],
+    templates: {
+      front: '{{Term}}',
+      back: '{{Definition}}',
+      hint: '{{Hint}}'
+    }
+  };
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  if (window.crypto?.subtle) {
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest))
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  return simpleHash(password);
+}
+
+function simpleHash(value) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+function generateUserId() {
+  return `user-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function encodeBase64(text) {
+  const encoded = new TextEncoder().encode(text);
+  let binary = '';
+  encoded.forEach(byte => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+function decodeBase64(value) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
 }
 
 function openSetEditor(mode, baseSet) {
