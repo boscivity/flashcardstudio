@@ -7,114 +7,73 @@
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-  <header class="site-header" role="banner">
-    <div class="site-header__inner">
-      <div class="site-brand" id="brandLink" role="button" tabindex="0">
-        <span class="site-brand__logo" aria-hidden="true">⚡</span>
-        <div class="site-brand__text">
-          <span class="site-brand__name">Flashcard Studio</span>
-          <span class="site-brand__tagline">Study beautifully</span>
-        </div>
+  <div class="top-bar" role="banner">
+    <div class="top-bar__inner">
+      <div class="top-bar__brand" id="brandLink" role="button" tabindex="0">
+        <span class="top-bar__logo" aria-hidden="true">⚡</span>
+        <span class="top-bar__title">Flashcard Studio</span>
       </div>
-      <div class="site-header__actions">
-        <div class="account-chip" id="topAccountStatus" data-state="guest" role="status">You are browsing as a guest</div>
-        <div class="site-header__buttons">
-          <button id="topSignUpButton" type="button" class="button button--ghost">Sign up</button>
-          <button id="topLogInButton" type="button" class="button button--ghost">Log in</button>
-          <button id="topSettingsButton" type="button" class="button button--ghost hidden" aria-label="Open settings">
-            <span class="button__icon" aria-hidden="true">⚙️</span>
-            <span class="button__label">Settings</span>
-          </button>
-          <button id="topLogoutButton" type="button" class="button button--ghost hidden">
-            <span class="button__icon" aria-hidden="true">⇦</span>
-            <span class="button__label">Log out</span>
+      <div class="top-bar__actions">
+        <span id="topAccountStatus" class="top-bar__status" data-state="guest">You are browsing as a guest</span>
+        <div class="top-bar__buttons">
+          <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
+          <button id="topLogInButton" type="button" class="secondary">Log in</button>
+          <button id="topLogoutButton" type="button" class="secondary hidden">Log out</button>
+          <button id="topSettingsButton" type="button" class="secondary hidden" aria-label="Settings">
+            <span class="theme-toggle__icon" aria-hidden="true">⚙️</span>
+            <span class="theme-toggle__label">Settings</span>
           </button>
         </div>
       </div>
     </div>
-  </header>
+  </div>
 
   <!-- Home Page -->
   <div id="homePage" class="page">
-    <main class="landing">
-      <section class="hero">
-        <div class="hero__content">
-          <span class="hero__eyebrow">Flashcards, reinvented</span>
-          <h1>Design beautiful study sessions in minutes.</h1>
-          <p class="hero__subtitle">
-            Flashcard Studio gives you a cohesive workspace to build, organize, and revise your decks. Your progress follows you on every device.
-          </p>
-          <div class="hero__actions">
-            <button type="button" id="heroGetStarted" class="button button--primary">Start creating</button>
-            <button type="button" id="topLogInButtonHero" class="button button--secondary">I already have an account</button>
-          </div>
-          <ul class="hero__highlights" aria-label="Highlights">
-            <li>Drag-friendly card editor</li>
-            <li>Lightning-fast CSV importer</li>
-            <li>Smart spaced review sessions</li>
-          </ul>
+    <main>
+      <header class="hero">
+        <h1>Flashcard Studio</h1>
+        <p class="subtitle">
+          Create, import, and study flashcard sets from any device. Sign in once and everything you create stays synced with your account.
+        </p>
+        <div class="hero-actions">
+          <button type="button" id="heroGetStarted">Get Started</button>
         </div>
-        <div class="hero__preview" aria-hidden="true">
-          <div class="hero-preview-card">
-            <div class="hero-preview-card__badge">Live preview</div>
-            <div class="hero-preview-card__body">
-              <div class="hero-preview-card__title">Biology: Plant Cells</div>
-              <p class="hero-preview-card__text">What is the function of the chloroplast?</p>
-              <div class="hero-preview-card__footer">
-                <span class="hero-preview-card__pill">Keyboard shortcuts ready</span>
-                <span class="hero-preview-card__pill">Cloud synced</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </header>
 
-      <section class="feature-section">
-        <div class="section-heading">
-          <h2>Everything you need for confident studying</h2>
-          <p>Streamlined tools, polished interfaces, and accessible controls that make mastering material feel effortless.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">🎨</div>
-            <h3>Unified creator</h3>
-            <p>Craft cards, templates, and hints in one cohesive panel. Preview updates instantly before you save.</p>
-          </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">📥</div>
-            <h3>Seamless import</h3>
-            <p>Upload CSV files or copy spreadsheets to build complete sets with automatic column detection.</p>
-          </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">🧠</div>
-            <h3>Guided review</h3>
-            <p>Stay in the zone with focused study modes, hints on demand, and quick keyboard shortcuts.</p>
-          </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">☁️</div>
-            <h3>Automatic sync</h3>
-            <p>Your work stays safe in the cloud—sign in anywhere and continue exactly where you left off.</p>
-          </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">📤</div>
-            <h3>Quick exports</h3>
-            <p>Download your data with one click to share with classmates or archive your progress.</p>
-          </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">🎯</div>
-            <h3>Focus dashboards</h3>
-            <p>Track card counts, templates, and completion in a structured workspace designed for clarity.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="cta-section" aria-labelledby="ctaHeading">
-        <div class="cta-card">
-          <div>
-            <h2 id="ctaHeading">Ready to upgrade your study flow?</h2>
-            <p>Join Flashcard Studio to create smarter decks, stay organized, and feel confident walking into every exam.</p>
+      <section class="features">
+        <h2>Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <h3>Visual Creator</h3>
+            <p>Create sets with a user-friendly interface. Customize fields and add cards easily.</p>
           </div>
-          <button type="button" id="ctaGetStarted" class="button button--primary">Create a free account</button>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>CSV Import</h3>
+            <p>Import spreadsheets and turn them into study-ready decks instantly.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3>Cloud Sync</h3>
+            <p>Your sets stay synced across all devices automatically.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⌨️</div>
+            <h3>Keyboard Shortcuts</h3>
+            <p>Study efficiently with keyboard shortcuts: <strong>1</strong> for known, <strong>2</strong> for unknown.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔗</div>
+            <h3>Share Sets</h3>
+            <p>Generate share links to collaborate with friends or study groups.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💾</div>
+            <h3>Export CSV</h3>
+            <p>Download your sets as CSV files for backup or use in other tools.</p>
+          </div>
         </div>
       </section>
     </main>
@@ -122,176 +81,154 @@
 
   <!-- Login Page -->
   <div id="loginPage" class="page hidden">
-    <main class="auth-layout">
-      <section class="auth-card">
-        <h1>Welcome back</h1>
-        <p class="auth-card__subtitle">Log in to access your synced flashcard studio.</p>
-
+    <main class="auth-main">
+      <div class="auth-container">
+        <h1>Log in to Flashcard Studio</h1>
+        <p class="subtitle">Access your flashcard sets from any device</p>
+        
         <div id="loginStatus" class="account-status hidden" role="status"></div>
-
+        
         <form id="logInForm" class="auth-form">
-          <label class="form-field">
-            <span class="form-field__label">Email</span>
+          <label>
+            Email
             <input id="logInEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
           </label>
-          <label class="form-field">
-            <span class="form-field__label">Password</span>
+          <label>
+            Password
             <input id="logInPassword" type="password" autocomplete="current-password" placeholder="Your password" required />
           </label>
-          <button type="submit" class="button button--primary button--full">Log in</button>
+          <button type="submit">Log in</button>
         </form>
-
-        <p class="auth-card__switch">Don't have an account?
-          <button id="switchToSignUp" type="button" class="link-button">Create one</button>
-        </p>
-      </section>
+        
+        <div class="auth-footer">
+          <p>Don't have an account? <button id="switchToSignUp" type="button" class="link-button">Sign up</button></p>
+        </div>
+      </div>
     </main>
   </div>
 
   <!-- Sign Up Page -->
   <div id="signupPage" class="page hidden">
-    <main class="auth-layout">
-      <section class="auth-card">
+    <main class="auth-main">
+      <div class="auth-container">
         <h1>Create your account</h1>
-        <p class="auth-card__subtitle">Design rich flashcards, study with focus, and sync instantly.</p>
-
+        <p class="subtitle">Start building your flashcard collection today</p>
+        
         <div id="signupStatus" class="account-status hidden" role="status"></div>
-
+        
         <form id="signUpForm" class="auth-form">
-          <label class="form-field">
-            <span class="form-field__label">Email</span>
+          <label>
+            Email
             <input id="signUpEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
           </label>
-          <label class="form-field">
-            <span class="form-field__label required">Password</span>
+          <label>
+            Password
             <input id="signUpPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
           </label>
-          <button type="submit" class="button button--primary button--full">Create account</button>
+          <button type="submit">Create account</button>
         </form>
-
-        <p class="auth-card__switch">Already have an account?
-          <button id="switchToLogIn" type="button" class="link-button">Log in</button>
-        </p>
-      </section>
+        
+        <div class="auth-footer">
+          <p>Already have an account? <button id="switchToLogIn" type="button" class="link-button">Log in</button></p>
+        </div>
+      </div>
     </main>
   </div>
 
   <!-- App Page (Sets Manager) -->
   <div id="appPage" class="page hidden">
-    <main class="workspace" aria-live="polite">
-      <section id="setManager" class="workspace__panel">
-        <header class="panel-header">
-          <div>
-            <h2>Your flashcard hub</h2>
-            <p class="panel-header__subtitle">Create, import, and study your decks from one organized place.</p>
-          </div>
-          <div class="panel-header__actions">
-            <button id="createSetButton" class="button button--primary">Create a set</button>
-            <button id="importSetButton" class="button button--secondary">Import CSV</button>
-            <button id="downloadExample" class="button button--ghost">Download example</button>
-            <input id="importSetInput" type="file" class="hidden" accept=".csv,text/csv" />
-          </div>
-        </header>
+    <main>
+      <section id="setManager">
+        <div class="section-header">
+          <h2>Your Flashcard Sets</h2>
+          <p>Create new sets, import from CSV, or study your existing decks.</p>
+        </div>
+        <div class="set-controls">
+          <button id="createSetButton">Create a set</button>
+          <button id="importSetButton" class="secondary">Import from CSV</button>
+          <button id="downloadExample" class="secondary download-example">Download example CSV</button>
+          <input id="importSetInput" type="file" class="hidden" accept=".csv,text/csv" />
+        </div>
         <div id="setsList" class="sets-list"></div>
       </section>
 
-      <section id="setEditor" class="workspace__panel hidden" aria-live="polite">
-        <header class="panel-header">
-          <div>
-            <h2 id="setEditorTitle">Create a set</h2>
-            <p class="panel-header__subtitle">Define your fields, build templates, and organize cards. Changes save to your account.</p>
-          </div>
-          <button id="cancelSetButton" type="button" class="button button--ghost">Close editor</button>
-        </header>
-
-        <div class="panel-group">
-          <div class="panel-card">
-            <h3 class="panel-card__title">Set details</h3>
-            <label class="form-field">
-              <span class="form-field__label required">Set name</span>
-              <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
-            </label>
-          </div>
-
-          <div class="panel-card">
-            <div class="panel-card__header">
-              <div>
-                <h3 class="panel-card__title">Fields</h3>
-                <p class="panel-card__subtitle">Columns become variables inside your templates.</p>
-              </div>
-              <div class="panel-card__toolbar">
-                <input id="newColumnInput" type="text" placeholder="Add a new field" />
-                <button id="addColumnButton" type="button" class="button button--secondary">Add field</button>
-              </div>
-            </div>
-            <div id="columnList" class="column-list"></div>
-          </div>
-
-          <div class="panel-card">
-            <h3 class="panel-card__title">Templates</h3>
-            <p class="panel-card__subtitle">Use <code>{{FieldName}}</code> to reference the values from each card.</p>
-            <div class="template-grid">
-              <label class="form-field">
-                <span class="form-field__label required">Front template</span>
-                <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
-              </label>
-              <label class="form-field">
-                <span class="form-field__label required">Back template</span>
-                <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
-              </label>
-            </div>
-            <label class="form-field">
-              <span class="form-field__label">Optional hint template</span>
-              <textarea id="templateHint" placeholder="e.g. {{Hint}}"></textarea>
-            </label>
-          </div>
-
-          <div class="panel-card">
-            <div class="panel-card__header">
-              <h3 class="panel-card__title">Cards</h3>
-              <button id="addCardButton" type="button" class="button button--secondary">Add card</button>
-            </div>
-            <div class="table-wrapper">
-              <table>
-                <thead id="cardsTableHead"></thead>
-                <tbody id="cardsTableBody"></tbody>
-              </table>
-            </div>
+      <section id="setEditor" class="hidden" aria-live="polite">
+        <div class="section-header">
+          <h2 id="setEditorTitle">Create a set</h2>
+          <p>Use the creator to define the fields you want and craft the flashcards for this set. Your work is saved to your account.</p>
+        </div>
+        <div class="flex-row">
+          <label class="required-field">
+            Set name
+            <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
+          </label>
+        </div>
+        <div class="column-editor">
+          <h3>Fields</h3>
+          <p class="subtitle" style="font-size: 0.95rem; text-align: left;">These are the columns you can reference in your templates.</p>
+          <div id="columnList"></div>
+          <div class="flex-row">
+            <input id="newColumnInput" type="text" placeholder="Add a new field" />
+            <button id="addColumnButton" type="button" class="secondary">Add field</button>
           </div>
         </div>
-
-        <footer class="panel-footer">
-          <button id="saveSetButton" type="button" class="button button--primary">Save set</button>
-          <button id="cancelSetButtonFooter" type="button" class="button button--ghost">Cancel</button>
-        </footer>
+        <div class="templates-editor">
+          <h3>Templates</h3>
+          <p class="subtitle" style="font-size: 0.95rem; text-align: left;">Use <code>{{FieldName}}</code> to pull values from your cards. Front and back are required.</p>
+          <div class="flex-row">
+            <label class="required-field">
+              Front template
+              <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
+            </label>
+            <label class="required-field">
+              Back template
+              <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
+            </label>
+          </div>
+          <label>
+            Optional hint template
+            <textarea id="templateHint" placeholder="e.g. {{Hint}}"></textarea>
+          </label>
+        </div>
+        <div class="cards-editor">
+          <div class="study-header" style="margin-bottom: 1rem;">
+            <h3 style="margin: 0;">Cards</h3>
+            <button id="addCardButton" type="button" class="secondary">Add card</button>
+          </div>
+          <div class="cards-editor__table-wrapper">
+            <table>
+              <thead id="cardsTableHead"></thead>
+              <tbody id="cardsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="saveSetButton" type="button">Save set</button>
+          <button id="cancelSetButton" type="button" class="secondary">Cancel</button>
+        </div>
       </section>
 
-      <section id="study" class="workspace__panel hidden" aria-live="polite">
-        <header class="panel-header">
-          <div>
-            <h2 id="studySetTitle">Study session</h2>
-            <p class="panel-header__subtitle">Reveal answers, track progress, and celebrate wins.</p>
+      <section id="study" class="hidden" aria-live="polite">
+        <div class="study-header">
+          <h2 id="studySetTitle">Study session</h2>
+          <button id="backButton" class="secondary back-button" type="button">Back</button>
+        </div>
+        <div class="card" id="cardText"></div>
+        <div class="card__hint" id="cardHint"></div>
+        <div class="actions">
+          <button id="showAnswer" type="button">1. Show answer</button>
+          <button id="knowButton" type="button" class="hidden">1. I know it</button>
+          <button id="dontKnowButton" type="button" class="hidden secondary">2. I don't know it</button>
+        </div>
+        <div class="progress-meter">
+          <div class="progress-meter__label" id="progressText">learned this round: 0/0</div>
+          <div class="progress-meter__track">
+            <div class="progress-meter__fill" id="progressFill"></div>
           </div>
-          <button id="backButton" class="button button--ghost back-button" type="button">Back to sets</button>
-        </header>
-        <div class="study-card" id="cardText"></div>
-        <div class="study-hint" id="cardHint"></div>
-        <div class="panel-footer panel-footer--stacked">
-          <div class="action-row" id="studyPrimaryActions">
-            <button id="showAnswer" type="button" class="button button--primary">1. Show answer</button>
-            <button id="knowButton" type="button" class="button button--primary hidden">1. I know it</button>
-            <button id="dontKnowButton" type="button" class="button button--secondary hidden">2. I don't know it</button>
-          </div>
-          <div class="progress-meter">
-            <div class="progress-meter__label" id="progressText">learned this round: 0/0</div>
-            <div class="progress-meter__track">
-              <div class="progress-meter__fill" id="progressFill"></div>
-            </div>
-          </div>
-          <div class="action-row">
-            <button id="restartButton" type="button" class="button button--secondary hidden">1. Study again</button>
-            <button id="returnButton" type="button" class="button button--ghost hidden back-button">2. Back</button>
-          </div>
+        </div>
+        <div class="actions">
+          <button id="restartButton" type="button" class="hidden secondary">1. Study again</button>
+          <button id="returnButton" type="button" class="hidden secondary back-button">2. Back</button>
         </div>
       </section>
     </main>
@@ -299,62 +236,59 @@
 
   <!-- Settings Page -->
   <div id="settingsPage" class="page hidden">
-    <main class="settings-layout">
-      <section id="settingsSection" class="settings-panel">
-        <header class="panel-header">
-          <div>
-            <h2>Workspace settings</h2>
-            <p class="panel-header__subtitle">Tune Flashcard Studio to match your preferences.</p>
-          </div>
-          <button id="backToAppButton" type="button" class="button button--ghost back-button">Back to sets</button>
-        </header>
-
+    <main>
+      <section id="settingsSection">
+        <div class="section-header">
+          <h2>Settings</h2>
+          <p>Manage your account preferences and appearance</p>
+        </div>
+        
         <div id="settingsStatus" class="account-status hidden" role="status"></div>
-
-        <div class="settings-group">
-          <article class="settings-card">
-            <div class="settings-card__header">
-              <div>
-                <h3 class="settings-card__title">Appearance</h3>
-                <p class="settings-card__subtitle">Choose the theme that feels right for your eyes.</p>
-              </div>
-              <button id="themeToggle" type="button" class="button button--secondary">
+        
+        <div class="settings-section">
+          <h3>Appearance</h3>
+          <div class="settings-row">
+            <div class="settings-info">
+              <strong>Theme</strong>
+              <p>Choose your preferred color scheme</p>
+            </div>
+            <div class="settings-control">
+              <button id="themeToggle" type="button" class="secondary">
                 <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
                 <span class="theme-toggle__label">Dark mode</span>
               </button>
             </div>
-          </article>
-
-          <article class="settings-card">
-            <div class="settings-card__header">
-              <div>
-                <h3 class="settings-card__title">Account security</h3>
-                <p class="settings-card__subtitle">Update your password to keep your account protected.</p>
-              </div>
-            </div>
-            <form id="changePasswordForm" class="settings-form">
-              <label class="form-field">
-                <span class="form-field__label required">Current password</span>
-                <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Your current password" required />
-              </label>
-              <label class="form-field">
-                <span class="form-field__label required">New password</span>
-                <input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
-              </label>
-              <label class="form-field">
-                <span class="form-field__label required">Confirm new password</span>
-                <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" minlength="8" required />
-              </label>
-              <button type="submit" class="button button--primary">Change password</button>
-            </form>
-          </article>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>Account Security</h3>
+          <form id="changePasswordForm" class="settings-form">
+            <label class="required-field">
+              Current Password
+              <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Your current password" required />
+            </label>
+            <label class="required-field">
+              New Password
+              <input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
+            </label>
+            <label class="required-field">
+              Confirm New Password
+              <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" minlength="8" required />
+            </label>
+            <button type="submit">Change Password</button>
+          </form>
+        </div>
+        
+        <div class="actions">
+          <button id="backToAppButton" type="button" class="secondary back-button">Back to Sets</button>
         </div>
       </section>
     </main>
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.7.0</div>
+  <div class="version-badge" aria-label="Version">v1.6.4</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
