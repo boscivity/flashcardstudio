@@ -213,19 +213,17 @@ signUpForm?.addEventListener('submit', async event => {
     setSignupStatusMessage('Creating your account…', 'info');
     const { data, error } = await supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: 'https://www.flashcardstudio.work/'
+      }
     });
     if (error) {
       setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
       return;
     }
     signUpForm.reset();
-    if (data?.session) {
-      setSignupStatusMessage('Account created! Redirecting...', 'success');
-      setTimeout(() => navigateTo('app'), 1000);
-    } else {
-      setSignupStatusMessage('Account created! Check your email to confirm your address.', 'success');
-    }
+    setSignupStatusMessage('Account created! Check your email to confirm your address before logging in.', 'success');
   } catch (error) {
     console.error(error);
     setSignupStatusMessage('Something went wrong while creating your account. Please try again.', 'error');
@@ -436,16 +434,25 @@ addCardBtn.addEventListener('click', () => {
 setNameInput.addEventListener('input', () => {
   if (!editorState) return;
   editorState.name = setNameInput.value;
+  if (setNameInput.value.trim()) {
+    setNameInput.classList.remove('field-error');
+  }
 });
 
 templateFront.addEventListener('input', () => {
   if (!editorState) return;
   editorState.templates.front = templateFront.value;
+  if (templateFront.value.trim()) {
+    templateFront.classList.remove('field-error');
+  }
 });
 
 templateBack.addEventListener('input', () => {
   if (!editorState) return;
   editorState.templates.back = templateBack.value;
+  if (templateBack.value.trim()) {
+    templateBack.classList.remove('field-error');
+  }
 });
 
 templateHint.addEventListener('input', () => {
@@ -462,16 +469,38 @@ saveSetBtn.addEventListener('click', async () => {
   if (!requireAccount('save sets')) {
     return;
   }
+  
+  // Clear previous error states
+  setNameInput.classList.remove('field-error');
+  templateFront.classList.remove('field-error');
+  templateBack.classList.remove('field-error');
+  
+  let hasErrors = false;
   const trimmedName = (editorState.name || '').trim();
   if (!trimmedName) {
-    alert('Give your set a name.');
-    setNameInput.focus();
-    return;
+    setNameInput.classList.add('field-error');
+    hasErrors = true;
   }
   const front = (editorState.templates.front || '').trim();
   const back = (editorState.templates.back || '').trim();
-  if (!front || !back) {
-    alert('Front and back templates are required.');
+  if (!front) {
+    templateFront.classList.add('field-error');
+    hasErrors = true;
+  }
+  if (!back) {
+    templateBack.classList.add('field-error');
+    hasErrors = true;
+  }
+  
+  if (hasErrors) {
+    alert('Please fill out all required fields (marked with a red asterisk).');
+    if (!trimmedName) {
+      setNameInput.focus();
+    } else if (!front) {
+      templateFront.focus();
+    } else if (!back) {
+      templateBack.focus();
+    }
     return;
   }
   const cleanedCards = editorState.cards.map(card => {
@@ -700,9 +729,25 @@ async function initializeAccountState() {
   loadLegacySetsFromLocalStorage();
   restorePendingShareFromStorage();
   
-  // Check URL hash for initial page
+  // Check for auth errors in URL hash
   const hash = window.location.hash.slice(1);
-  if (hash === 'login') {
+  const hashParams = new URLSearchParams(hash);
+  
+  if (hashParams.has('error')) {
+    const errorDesc = hashParams.get('error_description') || hashParams.get('error');
+    const cleanedDesc = errorDesc ? decodeURIComponent(errorDesc.replace(/\+/g, ' ')) : 'Authentication error';
+    
+    // Clear the hash
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    
+    // Show error message based on error type
+    if (cleanedDesc.includes('expired') || cleanedDesc.includes('invalid')) {
+      alert('The verification link has expired or is invalid. Please request a new one or contact support.');
+    } else {
+      alert(cleanedDesc);
+    }
+    navigateTo('login');
+  } else if (hash === 'login') {
     navigateTo('login');
   } else if (hash === 'signup') {
     navigateTo('signup');
@@ -746,7 +791,16 @@ async function handleAuthChange(session) {
     return;
   }
   
-  // User logged in, navigate to app
+  // Check if email is verified
+  if (!currentUser.email_confirmed_at) {
+    // Email not verified, sign out and show message
+    await supabase.auth.signOut();
+    alert('Please verify your email address before logging in. Check your inbox for the confirmation link.');
+    navigateTo('login');
+    return;
+  }
+  
+  // User logged in and verified, navigate to app
   navigateTo('app');
   
   await refreshSetsFromDatabase();
@@ -821,8 +875,12 @@ function requireAccount(actionDescription) {
 function loadLegacySetsFromLocalStorage() {
   try {
     const raw = localStorage.getItem(storageKey);
-    const parsed = raw ? JSON.parse(raw) : [];
-    legacySets = Array.isArray(parsed) ? parsed : [];
+    if (!raw) {
+      legacySets = [];
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    legacySets = Array.isArray(parsed) && parsed.length > 0 ? parsed : [];
   } catch (error) {
     console.warn('Could not load legacy sets', error);
     legacySets = [];

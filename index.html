@@ -158,7 +158,7 @@
           <p>Use the creator to define the fields you want and craft the flashcards for this set. Your work is saved to your account.</p>
         </div>
         <div class="flex-row">
-          <label>
+          <label class="required-field">
             Set name
             <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
           </label>
@@ -176,11 +176,11 @@
           <h3>Templates</h3>
           <p class="subtitle" style="font-size: 0.95rem; text-align: left;">Use <code>{{FieldName}}</code> to pull values from your cards. Front and back are required.</p>
           <div class="flex-row">
-            <label>
+            <label class="required-field">
               Front template
               <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
             </label>
-            <label>
+            <label class="required-field">
               Back template
               <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
             </label>
@@ -235,7 +235,7 @@
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.1</div>
+  <div class="version-badge" aria-label="Version">v1.6.2</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
