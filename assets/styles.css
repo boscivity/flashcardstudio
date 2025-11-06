@@ -7,7 +7,6 @@ body {
   min-height: 100vh;
   background: var(--page-gradient);
   color: var(--text-primary);
-  transition: background 0.3s ease, color 0.3s ease;
   --page-gradient: radial-gradient(circle at top left, #0f172a, #020617 55%);
   --text-primary: #e2e8f0;
   --text-muted: #94a3b8;
@@ -130,7 +129,6 @@ body[data-theme="light"] {
 .top-bar__status {
   font-size: 0.85rem;
   color: var(--text-muted);
-  transition: color 0.3s ease;
   margin-right: 0.5rem;
 }
 
@@ -238,7 +236,7 @@ button {
   background-color: var(--input-bg);
   color: var(--input-text);
   box-shadow: var(--control-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease, color 0.3s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   width: 100%;
   box-sizing: border-box;
 }
@@ -405,7 +403,6 @@ body[data-theme="light"] .account-card.is-loading::after {
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(148, 163, 184, 0.18);
   color: var(--text-muted);
-  transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
 }
 
 .account-status--success {
@@ -460,11 +457,13 @@ body[data-theme="light"] .account-status--info {
 .auth-main {
   max-width: 520px;
   margin: 0 auto;
-  padding: 4rem 1.5rem;
+  padding: 2rem 1.5rem;
   min-height: calc(100vh - 80px);
+  max-height: calc(100vh - 80px);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .auth-container {
@@ -869,11 +868,72 @@ textarea.field-error {
   outline: 2px solid rgba(239, 68, 68, 0.2);
 }
 
-label.required-field::after {
+/* Required field asterisk after the label text */
+.required-field::after {
   content: " *";
   color: #ef4444;
   font-weight: bold;
-  margin-left: 0.25rem;
+}
+
+/* Settings page styles */
+.settings-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--table-border);
+}
+
+.settings-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.settings-section h3 {
+  margin-bottom: 1.5rem;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.settings-info {
+  flex: 1 1 280px;
+}
+
+.settings-info strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.settings-info p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.settings-control {
+  flex: 0 0 auto;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 480px;
+}
+
+.settings-form label {
+  display: block;
+  margin-bottom: 0;
+}
+
+.settings-form button[type="submit"] {
+  margin-top: 0.5rem;
+  align-self: flex-start;
 }
 
 @media (max-width: 520px) {

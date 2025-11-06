@@ -3,6 +3,7 @@ const homePage = document.getElementById('homePage');
 const loginPage = document.getElementById('loginPage');
 const signupPage = document.getElementById('signupPage');
 const appPage = document.getElementById('appPage');
+const settingsPage = document.getElementById('settingsPage');
 
 const themeToggleBtn = document.getElementById('themeToggle');
 const setManagerSection = document.getElementById('setManager');
@@ -41,6 +42,7 @@ const topAccountStatus = document.getElementById('topAccountStatus');
 const topSignUpBtn = document.getElementById('topSignUpButton');
 const topLogInBtn = document.getElementById('topLogInButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
+const topSettingsBtn = document.getElementById('topSettingsButton');
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
 const brandLink = document.getElementById('brandLink');
 
@@ -57,6 +59,14 @@ const progressFill = document.getElementById('progressFill');
 const restartBtn = document.getElementById('restartButton');
 const returnBtn = document.getElementById('returnButton');
 const confettiContainer = document.getElementById('confettiContainer');
+
+const settingsSection = document.getElementById('settingsSection');
+const settingsStatus = document.getElementById('settingsStatus');
+const changePasswordForm = document.getElementById('changePasswordForm');
+const currentPasswordInput = document.getElementById('currentPassword');
+const newPasswordInput = document.getElementById('newPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const backToAppBtn = document.getElementById('backToAppButton');
 
 const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
 
@@ -91,6 +101,7 @@ function navigateTo(page) {
   loginPage?.classList.add('hidden');
   signupPage?.classList.add('hidden');
   appPage?.classList.add('hidden');
+  settingsPage?.classList.add('hidden');
   
   if (page === 'home') {
     homePage?.classList.remove('hidden');
@@ -106,6 +117,9 @@ function navigateTo(page) {
   } else if (page === 'app') {
     appPage?.classList.remove('hidden');
     window.history.pushState({ page: 'app' }, '', '#app');
+  } else if (page === 'settings') {
+    settingsPage?.classList.remove('hidden');
+    window.history.pushState({ page: 'settings' }, '', '#settings');
   }
 }
 
@@ -188,6 +202,62 @@ downloadExampleBtn.addEventListener('click', () => {
 
 topLogoutBtn?.addEventListener('click', handleSignOut);
 
+topSettingsBtn?.addEventListener('click', () => {
+  navigateTo('settings');
+});
+
+backToAppBtn?.addEventListener('click', () => {
+  navigateTo('app');
+});
+
+changePasswordForm?.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) return;
+  if (!supabase) {
+    setSettingsStatusMessage('Supabase client is not available.', 'error');
+    return;
+  }
+  if (!currentUser) {
+    setSettingsStatusMessage('You must be logged in to change your password.', 'error');
+    return;
+  }
+  
+  const newPassword = newPasswordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
+  
+  if (newPassword.length < 8) {
+    setSettingsStatusMessage('New password must be at least 8 characters long.', 'error');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    setSettingsStatusMessage('New passwords do not match.', 'error');
+    return;
+  }
+  
+  try {
+    setPasswordFormDisabled(true);
+    setSettingsStatusMessage('Updating your password…', 'info');
+    
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) {
+      setSettingsStatusMessage(error.message || 'Could not update password. Please try again.', 'error');
+      return;
+    }
+    
+    changePasswordForm.reset();
+    setSettingsStatusMessage('Password updated successfully!', 'success');
+  } catch (error) {
+    console.error(error);
+    setSettingsStatusMessage('Something went wrong. Please try again.', 'error');
+  } finally {
+    setPasswordFormDisabled(false);
+  }
+});
+
 signUpForm?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!signUpEmailInput || !signUpPasswordInput) return;
@@ -220,7 +290,12 @@ signUpForm?.addEventListener('submit', async event => {
       }
     });
     if (error) {
-      setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
+      // Check if user already exists
+      if (error.message && error.message.toLowerCase().includes('already registered')) {
+        setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
+      } else {
+        setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
+      }
       return;
     }
     signUpForm.reset();
@@ -764,6 +839,8 @@ async function initializeAccountState() {
     navigateTo('signup');
   } else if (hash === 'app') {
     navigateTo('app');
+  } else if (hash === 'settings') {
+    navigateTo('settings');
   } else {
     navigateTo('home');
   }
@@ -828,6 +905,7 @@ async function handleAuthChange(session) {
 function updateTopBar() {
   if (currentUser) {
     topLogoutBtn?.classList.remove('hidden');
+    topSettingsBtn?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
     if (topAccountStatus) {
@@ -836,6 +914,7 @@ function updateTopBar() {
     }
   } else {
     topLogoutBtn?.classList.add('hidden');
+    topSettingsBtn?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
     if (topAccountStatus) {
@@ -871,6 +950,21 @@ function setLoginFormDisabled(disabled) {
 function setSignupFormDisabled(disabled) {
   if (signUpForm) {
     const elements = signUpForm.querySelectorAll('input, button');
+    elements.forEach(el => el.disabled = disabled);
+  }
+}
+
+function setSettingsStatusMessage(message, type = 'info') {
+  if (!settingsStatus) return;
+  settingsStatus.classList.remove('hidden');
+  settingsStatus.textContent = message;
+  settingsStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
+  settingsStatus.classList.add(`account-status--${type}`);
+}
+
+function setPasswordFormDisabled(disabled) {
+  if (changePasswordForm) {
+    const elements = changePasswordForm.querySelectorAll('input, button');
     elements.forEach(el => el.disabled = disabled);
   }
 }

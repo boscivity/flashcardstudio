@@ -19,11 +19,11 @@
           <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
           <button id="topLogInButton" type="button" class="secondary">Log in</button>
           <button id="topLogoutButton" type="button" class="secondary hidden">Log out</button>
+          <button id="topSettingsButton" type="button" class="secondary hidden" aria-label="Settings">
+            <span class="theme-toggle__icon" aria-hidden="true">⚙️</span>
+            <span class="theme-toggle__label">Settings</span>
+          </button>
         </div>
-        <button type="button" class="secondary" id="themeToggle" aria-label="Switch theme" aria-pressed="true">
-          <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
-          <span class="theme-toggle__label">Dark mode</span>
-        </button>
       </div>
     </div>
   </div>
@@ -234,8 +234,61 @@
     </main>
   </div>
 
+  <!-- Settings Page -->
+  <div id="settingsPage" class="page hidden">
+    <main>
+      <section id="settingsSection">
+        <div class="section-header">
+          <h2>Settings</h2>
+          <p>Manage your account preferences and appearance</p>
+        </div>
+        
+        <div id="settingsStatus" class="account-status hidden" role="status"></div>
+        
+        <div class="settings-section">
+          <h3>Appearance</h3>
+          <div class="settings-row">
+            <div class="settings-info">
+              <strong>Theme</strong>
+              <p>Choose your preferred color scheme</p>
+            </div>
+            <div class="settings-control">
+              <button id="themeToggle" type="button" class="secondary">
+                <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+                <span class="theme-toggle__label">Dark mode</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>Account Security</h3>
+          <form id="changePasswordForm" class="settings-form">
+            <label>
+              Current Password
+              <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Your current password" required />
+            </label>
+            <label>
+              New Password
+              <input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
+            </label>
+            <label>
+              Confirm New Password
+              <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" minlength="8" required />
+            </label>
+            <button type="submit">Change Password</button>
+          </form>
+        </div>
+        
+        <div class="actions">
+          <button id="backToAppButton" type="button" class="secondary back-button">Back to Sets</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.3</div>
+  <div class="version-badge" aria-label="Version">v1.6.4</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
