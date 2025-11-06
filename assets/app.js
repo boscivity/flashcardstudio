@@ -146,8 +146,8 @@ themeToggleBtn?.addEventListener('click', async () => {
         data: { theme: nextTheme }
       });
     } catch (error) {
-      console.error('Could not save theme preference:', error);
-      // Continue anyway, theme is saved locally
+      console.error('Failed to save theme preference to user account:', error.message || error);
+      // Continue anyway, theme is saved locally as fallback
     }
   }
 });
@@ -825,14 +825,15 @@ function renderSetsList() {
 
 async function handleSignOut() {
   if (!supabase) {
-    alert('Unable to sign out. Please try again.');
+    console.error('Sign out failed: Supabase client not initialized');
+    alert('Unable to sign out. The authentication service is not available. Please refresh the page and try again.');
     return;
   }
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Sign out error:', error);
-      alert('Could not sign out. Please try again.');
+      console.error('Sign out failed with Supabase error:', error.message || error);
+      alert('Could not sign out due to a server error. Please try again or refresh the page.');
       return;
     }
     // Clear local state
@@ -841,8 +842,8 @@ async function handleSignOut() {
     sets = [];
     navigateTo('home');
   } catch (error) {
-    console.error('Could not sign out', error);
-    alert('An error occurred while signing out. Please try again.');
+    console.error('Sign out failed with unexpected error:', error.message || error);
+    alert('An unexpected error occurred while signing out. Please refresh the page and try again.');
   }
 }
 
@@ -1126,8 +1127,36 @@ async function handleShareLinkFromUrl() {
   const nextUrl = `${url.pathname}${url.search ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
   window.history.replaceState({}, '', nextUrl);
   
-  // Show message that share links are no longer supported
-  alert('Share links are no longer supported. Please use the CSV export feature to share your sets with others.');
+  // Log deprecation and show a more user-friendly message
+  console.warn('Share links are deprecated. Detected share parameter in URL but ignoring it.');
+  
+  // Show a brief notification to the user
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30, 30, 60, 0.95);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    font-size: 0.95rem;
+    max-width: 90%;
+    text-align: center;
+  `;
+  notification.textContent = 'Share links are no longer supported. Please use CSV export to share sets.';
+  document.body.appendChild(notification);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => notification.remove(), 300);
+  }, 5000);
 }
 
 function exportSetToCsv(setId) {
