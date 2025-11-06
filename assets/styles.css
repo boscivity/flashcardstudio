@@ -869,7 +869,8 @@ textarea.field-error {
 }
 
 /* Required field asterisk after the label text */
-.required-field::after {
+.required-field > span.label-text::after,
+.required-field.inline-label::after {
   content: " *";
   color: #ef4444;
   font-weight: bold;

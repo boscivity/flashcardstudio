@@ -134,10 +134,22 @@ const storedTheme = localStorage.getItem('flashcard-studio-theme');
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
 applyTheme(initialTheme);
 
-themeToggleBtn?.addEventListener('click', () => {
+themeToggleBtn?.addEventListener('click', async () => {
   const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
   applyTheme(nextTheme);
   localStorage.setItem('flashcard-studio-theme', nextTheme);
+  
+  // Save theme preference to user account if logged in
+  if (currentUser && supabase) {
+    try {
+      await supabase.auth.updateUser({
+        data: { theme: nextTheme }
+      });
+    } catch (error) {
+      console.error('Could not save theme preference:', error);
+      // Continue anyway, theme is saved locally
+    }
+  }
 });
 
 brandLink?.addEventListener('click', () => {
@@ -431,8 +443,6 @@ setsList.addEventListener('click', async event => {
     if (set) {
       openSetEditor('edit', set);
     }
-  } else if (action === 'share') {
-    copyShareLink(setId);
   } else if (action === 'export') {
     exportSetToCsv(setId);
   } else if (action === 'delete') {
@@ -804,7 +814,6 @@ function renderSetsList() {
         <div class="set-card__actions">
           <button data-action="study" data-id="${set.id}">Study</button>
           <button data-action="edit" data-id="${set.id}" class="secondary">Edit</button>
-          <button data-action="share" data-id="${set.id}" class="secondary">Copy share link</button>
           <button data-action="export" data-id="${set.id}" class="secondary">Export CSV</button>
           <button data-action="delete" data-id="${set.id}" class="secondary danger">Delete</button>
         </div>
@@ -816,16 +825,24 @@ function renderSetsList() {
 
 async function handleSignOut() {
   if (!supabase) {
+    alert('Unable to sign out. Please try again.');
     return;
   }
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      throw error;
+      console.error('Sign out error:', error);
+      alert('Could not sign out. Please try again.');
+      return;
     }
+    // Clear local state
+    currentSession = null;
+    currentUser = null;
+    sets = [];
     navigateTo('home');
   } catch (error) {
     console.error('Could not sign out', error);
+    alert('An error occurred while signing out. Please try again.');
   }
 }
 
@@ -905,6 +922,13 @@ async function handleAuthChange(session) {
     alert('Please verify your email address before logging in. Check your inbox for the confirmation link.');
     navigateTo('login');
     return;
+  }
+  
+  // Load user's theme preference
+  const userTheme = currentUser.user_metadata?.theme;
+  if (userTheme === 'light' || userTheme === 'dark') {
+    applyTheme(userTheme);
+    localStorage.setItem('flashcard-studio-theme', userTheme);
   }
   
   // User logged in and verified, navigate to app
@@ -1097,48 +1121,13 @@ async function handleShareLinkFromUrl() {
   if (!shareParam) {
     return;
   }
+  // Clean up the URL
   url.searchParams.delete('share');
   const nextUrl = `${url.pathname}${url.search ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
   window.history.replaceState({}, '', nextUrl);
-  try {
-    const decoded = decodeBase64(shareParam);
-    const payload = JSON.parse(decoded);
-    storePendingSharedSet(payload);
-    if (currentUser) {
-      await handlePendingSharedImport();
-    } else {
-      alert('Please log in to add the shared set to your account.');
-      navigateTo('login');
-    }
-  } catch (error) {
-    console.error('Could not import shared set', error);
-    alert('Could not import that shared set link. It may have expired or been corrupted.');
-  }
-}
-
-function copyShareLink(setId) {
-  const set = sets.find(candidate => candidate.id === setId);
-  if (!set) {
-    return;
-  }
-  const payload = createShareablePayload(set);
-  const encoded = encodeBase64(JSON.stringify(payload));
-  const url = new URL(window.location.href);
-  url.searchParams.delete('share');
-  url.searchParams.set('share', encoded);
-  const shareUrl = url.toString();
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard
-      .writeText(shareUrl)
-      .then(() => {
-        alert('Share link copied to your clipboard.');
-      })
-      .catch(() => {
-        prompt('Copy this link to share your set:', shareUrl);
-      });
-  } else {
-    prompt('Copy this link to share your set:', shareUrl);
-  }
+  
+  // Show message that share links are no longer supported
+  alert('Share links are no longer supported. Please use the CSV export feature to share your sets with others.');
 }
 
 function exportSetToCsv(setId) {
