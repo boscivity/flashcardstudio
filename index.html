@@ -7,17 +7,38 @@
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-  <main>
-    <header>
-      <div class="theme-toggle">
-        <button type="button" class="secondary" id="themeToggle" aria-label="Toggle color theme">
-          Switch to Light Theme
+  <div class="top-bar" role="banner">
+    <div class="top-bar__inner">
+      <div class="top-bar__brand">
+        <span class="top-bar__logo" aria-hidden="true">⚡</span>
+        <span class="top-bar__title">Flashcard Studio</span>
+      </div>
+      <div class="top-bar__actions">
+        <div class="top-bar__account">
+          <span id="topAccountStatus" class="top-bar__status" data-state="guest">You are browsing as a guest</span>
+          <div class="top-bar__buttons">
+            <button id="topSignUpButton" type="button" class="secondary" aria-pressed="false">Sign up</button>
+            <button id="topLogInButton" type="button" aria-pressed="true">Log in</button>
+            <button id="topLogoutButton" type="button" class="secondary hidden">Log out</button>
+          </div>
+        </div>
+        <button type="button" class="icon-button" id="themeToggle" aria-label="Switch theme" aria-pressed="true">
+          <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+          <span class="theme-toggle__label">Dark mode</span>
         </button>
       </div>
+    </div>
+  </div>
+  <main>
+    <header class="hero">
       <h1>Flashcard Studio</h1>
       <p class="subtitle">
-        Build, import, and manage flashcard sets directly in your browser.
+        Sign in once to build, import, and study flashcard sets from any device. Everything you create stays synced with your account.
       </p>
+      <div class="hero-actions">
+        <button type="button" id="heroGetStarted">Create an account</button>
+        <button type="button" id="heroBrowseSets" class="secondary">Manage your sets</button>
+      </div>
     </header>
 
     <section id="accountSection" aria-live="polite">
@@ -27,6 +48,7 @@
       </div>
       <div class="account-card">
         <div id="accountStatus" class="account-status" role="status"></div>
+        <p class="account-card__hint">Use the quick actions to switch between sign up and log in. We'll keep this area updated with progress so you always know what's happening.</p>
         <form id="signUpForm" class="account-form hidden">
           <div class="flex-row">
             <label>
@@ -54,8 +76,8 @@
           <button type="submit">Log in</button>
         </form>
         <div class="account-actions">
-          <button id="showSignUp" type="button">Create an account</button>
-          <button id="showLogIn" type="button" class="hidden">I already have an account</button>
+          <button id="showSignUp" type="button">Need an account? Sign up</button>
+          <button id="showLogIn" type="button" class="hidden">Switch to log in</button>
           <button id="logoutButton" type="button" class="secondary hidden">Log out</button>
         </div>
       </div>
@@ -171,7 +193,7 @@
   </main>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.4.0</div>
+  <div class="version-badge" aria-label="Version">v1.5.0</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-u8fI6FzMCqJv4T1ciqw/pPYZC9AJYLK0JFAcUlFqgS3fD8Xm9gO8nBaPw0T0MBPJ" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>

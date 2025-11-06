@@ -34,6 +34,9 @@ body {
   --button-danger-text: #f87171;
   --control-shadow: 0 2px 8px rgba(2, 6, 23, 0.25);
   --version-color: #ffffff;
+  --topbar-bg: rgba(15, 23, 42, 0.82);
+  --topbar-border: rgba(148, 163, 184, 0.25);
+  --topbar-shadow: 0 18px 45px rgba(2, 6, 23, 0.3);
 }
 
 body[data-theme="dark"] {
@@ -66,6 +69,101 @@ body[data-theme="light"] {
   --control-shadow: 0 2px 8px rgba(46, 54, 80, 0.08);
   color-scheme: light;
   --version-color: #000000;
+  --topbar-bg: rgba(255, 255, 255, 0.9);
+  --topbar-border: rgba(88, 99, 126, 0.18);
+  --topbar-shadow: 0 18px 35px rgba(46, 54, 80, 0.14);
+}
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
+  box-shadow: var(--topbar-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 0.75rem 1.5rem;
+}
+
+.top-bar__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.top-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.top-bar__logo {
+  font-size: 1.4rem;
+}
+
+.top-bar__title {
+  font-size: 1.05rem;
+}
+
+.top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.top-bar__account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.top-bar__status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+
+.top-bar__status[data-state="success"],
+.top-bar__status[data-state="authenticated"] {
+  color: #34d399;
+}
+
+.top-bar__status[data-state="error"] {
+  color: #fca5a5;
+}
+
+.top-bar__status[data-state="info"] {
+  color: #60a5fa;
+}
+
+.top-bar__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.top-bar__buttons button {
+  flex: 0 0 auto;
+  min-width: 104px;
+}
+
+.top-bar__buttons button.is-active {
+  border-color: rgba(127, 92, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(63, 135, 255, 0.25);
+  background: linear-gradient(120deg, rgba(63, 135, 255, 0.18), rgba(127, 92, 255, 0.2));
+}
+
+body[data-theme="light"] .top-bar__buttons button.is-active {
+  background: rgba(79, 105, 231, 0.16);
 }
 
 main {
@@ -82,6 +180,17 @@ header {
   flex-direction: column;
   gap: 1.25rem;
   align-items: center;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.hero-actions button {
+  min-width: 190px;
 }
 
 h1 {
@@ -175,6 +284,18 @@ button:hover {
   box-shadow: 0 12px 25px rgba(63, 135, 255, 0.2);
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 button.secondary {
   background: var(--button-secondary-bg);
   color: var(--button-secondary-text);
@@ -193,6 +314,36 @@ button.secondary:hover {
 
 button.danger:hover {
   background: rgba(220, 38, 38, 0.18);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--button-secondary-border);
+  background: transparent;
+  color: var(--button-secondary-text);
+  box-shadow: none;
+  width: auto;
+}
+
+.icon-button:hover {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+body[data-theme="light"] .icon-button:hover {
+  background: rgba(79, 105, 231, 0.08);
+}
+
+.theme-toggle__icon {
+  font-size: 1.1rem;
+}
+
+.theme-toggle__label {
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 button.download-example {
@@ -224,11 +375,49 @@ button.download-example {
   border-radius: 16px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.25);
+  position: relative;
+  overflow: hidden;
 }
 
 body[data-theme="light"] .account-card {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(79, 105, 231, 0.18);
+}
+
+.account-card__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.account-card.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+body[data-theme="light"] .account-card.is-loading::after {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.account-card.is-loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 4px solid transparent;
+  border-top-color: #7f5cff;
+  border-right-color: #7f5cff;
+  transform: translate(-50%, -50%);
+  animation: spinner 0.9s linear infinite;
+  z-index: 3;
 }
 
 .account-status {
@@ -357,6 +546,15 @@ body[data-theme="light"] .account-status--info {
   background-size: 200% 200%;
   animation: shimmer 3s ease infinite;
   transition: width 0.5s ease;
+}
+
+@keyframes spinner {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 @keyframes shimmer {
@@ -509,20 +707,6 @@ footer {
   pointer-events: none;
 }
 
-header .theme-toggle {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-body[data-theme="light"] .theme-toggle {
-  box-shadow: none;
-}
-
-header .theme-toggle button {
-  width: auto;
-}
-
 .confetti-container {
   pointer-events: none;
   position: fixed;
@@ -544,6 +728,50 @@ header .theme-toggle button {
   will-change: transform, opacity;
 }
 
+@media (max-width: 900px) {
+  .top-bar__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .top-bar__actions {
+    width: 100%;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .top-bar__account {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .top-bar__buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .top-bar__buttons button {
+    flex: 1 1 45%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-actions button {
+    flex: 1 1 100%;
+  }
+
+  .top-bar {
+    padding: 0.65rem 1rem;
+  }
+
+  .top-bar__buttons button {
+    flex: 1 1 100%;
+  }
+}
+
 @media (max-width: 720px) {
   main {
     padding: 2rem 1rem 3rem;
@@ -555,10 +783,5 @@ header .theme-toggle button {
 
   .card {
     padding: 2rem 1.5rem;
-  }
-
-  header .theme-toggle {
-    position: static;
-    align-self: flex-end;
   }
 }

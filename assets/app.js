@@ -32,6 +32,15 @@ const showSignUpBtn = document.getElementById('showSignUp');
 const showLogInBtn = document.getElementById('showLogIn');
 const logoutButton = document.getElementById('logoutButton');
 
+const accountSection = document.getElementById('accountSection');
+const accountCard = document.querySelector('.account-card');
+const topAccountStatus = document.getElementById('topAccountStatus');
+const topSignUpBtn = document.getElementById('topSignUpButton');
+const topLogInBtn = document.getElementById('topLogInButton');
+const topLogoutBtn = document.getElementById('topLogoutButton');
+const heroGetStartedBtn = document.getElementById('heroGetStarted');
+const heroBrowseSetsBtn = document.getElementById('heroBrowseSets');
+
 const studySection = document.getElementById('study');
 const studySetTitle = document.getElementById('studySetTitle');
 const backButton = document.getElementById('backButton');
@@ -52,9 +61,9 @@ const storageKey = 'flashcardStudioSets';
 const pendingShareStorageKey = 'flashcardStudioPendingShare';
 
 const SUPABASE_URL = 'https://tbydrjbqixrrowriuvjx.supabase.co';
-const SUPABASE_SERVICE_KEY = 'sb_secret_55Lz-zux75p5xxkYItdT-w_MViTif5f';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRieWRyamJxaXhycm93cml1dmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzODczMjUsImV4cCI6MjA3Nzk2MzMyNX0.HOOtdJw6viZ7OozHo3GvK2Q43o0ekMeW30QwUjUcBT0';
 
-const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let sets = [];
 let editorState = null;
@@ -76,10 +85,18 @@ const storedTheme = localStorage.getItem('flashcard-studio-theme');
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
 applyTheme(initialTheme);
 
-themeToggleBtn.addEventListener('click', () => {
+themeToggleBtn?.addEventListener('click', () => {
   const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
   applyTheme(nextTheme);
   localStorage.setItem('flashcard-studio-theme', nextTheme);
+});
+
+heroGetStartedBtn?.addEventListener('click', () => {
+  focusAccountSection('signup');
+});
+
+heroBrowseSetsBtn?.addEventListener('click', () => {
+  scrollToSection(setManagerSection);
 });
 
 downloadExampleBtn.addEventListener('click', () => {
@@ -107,18 +124,16 @@ showLogInBtn?.addEventListener('click', () => {
   toggleAccountForms('login');
 });
 
-logoutButton?.addEventListener('click', async () => {
-  if (!supabase) {
-    setAccountStatusMessage('Supabase client is not available.', 'error');
-    return;
-  }
-  setAccountStatusMessage('Signing you out…', 'info', false);
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    console.error('Could not sign out', error);
-    setAccountStatusMessage('Could not log you out. Please try again.', 'error');
-  }
+topSignUpBtn?.addEventListener('click', () => {
+  focusAccountSection('signup');
 });
+
+topLogInBtn?.addEventListener('click', () => {
+  focusAccountSection('login');
+});
+
+logoutButton?.addEventListener('click', handleSignOut);
+topLogoutBtn?.addEventListener('click', handleSignOut);
 
 signUpForm?.addEventListener('submit', async event => {
   event.preventDefault();
@@ -142,6 +157,7 @@ signUpForm?.addEventListener('submit', async event => {
     return;
   }
   try {
+    setAccountFormsDisabled(true);
     setAccountStatusMessage('Creating your account…', 'info', true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -161,6 +177,8 @@ signUpForm?.addEventListener('submit', async event => {
   } catch (error) {
     console.error(error);
     setAccountStatusMessage('Something went wrong while creating your account. Please try again.', 'error');
+  } finally {
+    setAccountFormsDisabled(false);
   }
 });
 
@@ -178,6 +196,7 @@ logInForm?.addEventListener('submit', async event => {
     return;
   }
   try {
+    setAccountFormsDisabled(true);
     setAccountStatusMessage('Signing you in…', 'info', true);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -194,6 +213,8 @@ logInForm?.addEventListener('submit', async event => {
   } catch (error) {
     console.error(error);
     setAccountStatusMessage('Could not log you in. Please try again.', 'error');
+  } finally {
+    setAccountFormsDisabled(false);
   }
 });
 
@@ -616,6 +637,26 @@ function renderSetsList() {
     .join('');
 }
 
+async function handleSignOut() {
+  if (!supabase) {
+    setAccountStatusMessage('Supabase client is not available.', 'error');
+    return;
+  }
+  setAccountFormsDisabled(true);
+  setAccountStatusMessage('Signing you out…', 'info', true);
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error('Could not sign out', error);
+    setAccountStatusMessage('Could not log you out. Please try again.', 'error');
+  } finally {
+    setAccountFormsDisabled(false);
+  }
+}
+
 async function initializeAccountState() {
   loadLegacySetsFromLocalStorage();
   restorePendingShareFromStorage();
@@ -671,24 +712,33 @@ function renderAccountUi() {
     logoutButton.classList.remove('hidden');
     showSignUpBtn.classList.add('hidden');
     showLogInBtn.classList.add('hidden');
+    topLogoutBtn?.classList.remove('hidden');
+    topSignUpBtn?.classList.add('hidden');
+    topLogInBtn?.classList.add('hidden');
+    setTopAuthMode(null);
     signUpForm?.classList.add('hidden');
     logInForm?.classList.add('hidden');
+    updateTopAccountSummary('authenticated', `Signed in as ${currentUser.email}`);
     if (accountStatus?.dataset.locked !== 'true') {
       setAccountStatusMessage(`Logged in as ${currentUser.email}`, 'success', false);
     }
   } else {
     logoutButton.classList.add('hidden');
-    showSignUpBtn.classList.remove('hidden');
-    if (signUpForm?.classList.contains('hidden')) {
-      showLogInBtn.classList.add('hidden');
-    } else {
-      showLogInBtn.classList.remove('hidden');
-    }
+    topLogoutBtn?.classList.add('hidden');
+    topSignUpBtn?.classList.remove('hidden');
+    topLogInBtn?.classList.remove('hidden');
+    const signupVisible = !signUpForm?.classList.contains('hidden');
+    showSignUpBtn.classList.toggle('hidden', signupVisible);
+    showLogInBtn.classList.toggle('hidden', !signupVisible);
     if (signUpForm?.classList.contains('hidden') && logInForm?.classList.contains('hidden')) {
       toggleAccountForms('login');
+    } else {
+      setTopAuthMode(signupVisible ? 'signup' : 'login');
     }
     if (accountStatus?.dataset.locked !== 'true') {
       setAccountStatusMessage('Log in or sign up to manage your flashcard sets.', 'info', false);
+    } else if (!topAccountStatus?.dataset.state || topAccountStatus.dataset.state === 'authenticated') {
+      updateTopAccountSummary('guest', 'You are browsing as a guest');
     }
   }
 }
@@ -697,21 +747,60 @@ function toggleAccountForms(mode) {
   if (!signUpForm || !logInForm || !showSignUpBtn || !showLogInBtn) {
     return;
   }
-  if (mode === 'signup') {
+  const showSignup = mode === 'signup';
+  if (showSignup) {
     signUpForm.classList.remove('hidden');
     logInForm.classList.add('hidden');
     showSignUpBtn.classList.add('hidden');
     showLogInBtn.classList.remove('hidden');
-    signUpEmailInput?.focus();
+    signUpEmailInput?.focus({ preventScroll: true });
   } else {
     logInForm.classList.remove('hidden');
     signUpForm.classList.add('hidden');
     showSignUpBtn.classList.remove('hidden');
     showLogInBtn.classList.add('hidden');
-    logInEmailInput?.focus();
+    logInEmailInput?.focus({ preventScroll: true });
   }
+  setTopAuthMode(showSignup ? 'signup' : 'login');
   if (accountStatus?.dataset.locked !== 'true' && !currentUser) {
     setAccountStatusMessage('Log in or sign up to manage your flashcard sets.', 'info', false);
+  }
+}
+
+function setTopAuthMode(mode) {
+  if (topSignUpBtn) {
+    const isSignup = mode === 'signup';
+    topSignUpBtn.classList.toggle('is-active', isSignup);
+    topSignUpBtn.setAttribute('aria-pressed', isSignup ? 'true' : 'false');
+  }
+  if (topLogInBtn) {
+    const isLogin = mode === 'login';
+    topLogInBtn.classList.toggle('is-active', isLogin);
+    topLogInBtn.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
+  }
+}
+
+function updateTopAccountSummary(state, message) {
+  if (!topAccountStatus) {
+    return;
+  }
+  topAccountStatus.textContent = message;
+  topAccountStatus.dataset.state = state;
+}
+
+function scrollToSection(section) {
+  if (!section) return;
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function focusAccountSection(mode = 'login') {
+  scrollToSection(accountSection);
+  toggleAccountForms(mode);
+  const focusTarget = mode === 'signup' ? signUpEmailInput : logInEmailInput;
+  if (focusTarget) {
+    setTimeout(() => {
+      focusTarget.focus({ preventScroll: true });
+    }, 250);
   }
 }
 
@@ -721,6 +810,44 @@ function setAccountStatusMessage(message, type = 'info', lock = type !== 'info')
   accountStatus.classList.remove('account-status--info', 'account-status--error', 'account-status--success');
   accountStatus.classList.add(`account-status--${type}`);
   accountStatus.dataset.locked = lock ? 'true' : 'false';
+  if (lock) {
+    updateTopAccountSummary(type, message);
+  } else if (currentUser) {
+    updateTopAccountSummary('authenticated', `Signed in as ${currentUser.email}`);
+  } else {
+    updateTopAccountSummary('guest', 'You are browsing as a guest');
+  }
+}
+
+function setAccountFormsDisabled(disabled) {
+  if (accountSection) {
+    accountSection.setAttribute('aria-busy', disabled ? 'true' : 'false');
+  }
+  if (accountCard) {
+    const interactiveElements = accountCard.querySelectorAll('input, button');
+    interactiveElements.forEach(element => {
+      element.disabled = disabled;
+    });
+    accountCard.classList.toggle('is-loading', disabled);
+  }
+  if (topSignUpBtn) {
+    topSignUpBtn.disabled = disabled;
+  }
+  if (topLogInBtn) {
+    topLogInBtn.disabled = disabled;
+  }
+  if (topLogoutBtn) {
+    topLogoutBtn.disabled = disabled;
+  }
+  if (showSignUpBtn) {
+    showSignUpBtn.disabled = disabled;
+  }
+  if (showLogInBtn) {
+    showLogInBtn.disabled = disabled;
+  }
+  if (logoutButton) {
+    logoutButton.disabled = disabled;
+  }
 }
 
 function requireAccount(actionDescription) {
@@ -1376,6 +1503,16 @@ function generateCardId() {
 function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
   document.documentElement.style.colorScheme = theme;
-  themeToggleBtn.textContent = theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme';
+  if (!themeToggleBtn) {
+    return;
+  }
+  const nextTheme = theme === 'dark' ? 'light' : 'dark';
+  const icon = nextTheme === 'light' ? '☀️' : '🌙';
+  const label = `${nextTheme.charAt(0).toUpperCase()}${nextTheme.slice(1)} mode`;
+  themeToggleBtn.innerHTML = `
+    <span class="theme-toggle__icon" aria-hidden="true">${icon}</span>
+    <span class="theme-toggle__label">${label}</span>
+  `;
+  themeToggleBtn.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
   themeToggleBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
 }
