@@ -1,5 +1,5 @@
 :root {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
@@ -7,35 +7,36 @@ body {
   min-height: 100vh;
   background: var(--page-gradient);
   color: var(--text-primary);
-  --page-gradient: radial-gradient(circle at top left, #0f172a, #020617 55%);
-  --text-primary: #e2e8f0;
-  --text-muted: #94a3b8;
-  --surface-bg: rgba(15, 23, 42, 0.85);
-  --surface-shadow: 0 20px 45px rgba(2, 6, 23, 0.35);
-  --input-bg: rgba(15, 23, 42, 0.75);
-  --input-border: rgba(148, 163, 184, 0.45);
-  --input-text: #e2e8f0;
-  --card-bg: rgba(15, 23, 42, 0.75);
-  --card-border: rgba(96, 165, 250, 0.35);
-  --hint-color: #cbd5f5;
-  --counter-color: #cbd5f5;
-  --table-border: rgba(148, 163, 184, 0.3);
-  --table-header-bg: rgba(30, 41, 59, 0.75);
-  --table-row-bg: rgba(15, 23, 42, 0.65);
-  --footer-color: #94a3b8;
-  --button-primary-bg: linear-gradient(120deg, #3f87ff, #7f5cff);
+  --page-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --text-primary: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.8);
+  --surface-bg: rgba(255, 255, 255, 0.1);
+  --surface-bg-solid: rgba(30, 30, 60, 0.95);
+  --surface-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --input-bg: rgba(255, 255, 255, 0.15);
+  --input-border: rgba(255, 255, 255, 0.3);
+  --input-text: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.15);
+  --card-border: rgba(255, 255, 255, 0.25);
+  --hint-color: rgba(255, 255, 255, 0.9);
+  --counter-color: rgba(255, 255, 255, 0.9);
+  --table-border: rgba(255, 255, 255, 0.2);
+  --table-header-bg: rgba(255, 255, 255, 0.15);
+  --table-row-bg: rgba(255, 255, 255, 0.05);
+  --footer-color: rgba(255, 255, 255, 0.7);
+  --button-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --button-primary-text: #fff;
-  --button-secondary-bg: rgba(30, 41, 59, 0.85);
-  --button-secondary-text: #e2e8f0;
-  --button-secondary-border: rgba(148, 163, 184, 0.4);
-  --button-danger-bg: rgba(220, 38, 38, 0.12);
-  --button-danger-border: rgba(248, 113, 113, 0.35);
-  --button-danger-text: #f87171;
-  --control-shadow: 0 2px 8px rgba(2, 6, 23, 0.25);
-  --version-color: #ffffff;
-  --topbar-bg: rgba(15, 23, 42, 0.82);
-  --topbar-border: rgba(148, 163, 184, 0.25);
-  --topbar-shadow: 0 18px 45px rgba(2, 6, 23, 0.3);
+  --button-secondary-bg: rgba(255, 255, 255, 0.15);
+  --button-secondary-text: #ffffff;
+  --button-secondary-border: rgba(255, 255, 255, 0.3);
+  --button-danger-bg: rgba(239, 68, 68, 0.2);
+  --button-danger-border: rgba(239, 68, 68, 0.5);
+  --button-danger-text: #fca5a5;
+  --control-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --version-color: rgba(255, 255, 255, 0.6);
+  --topbar-bg: rgba(30, 30, 60, 0.95);
+  --topbar-border: rgba(255, 255, 255, 0.1);
+  --topbar-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
 body[data-theme="dark"] {
@@ -43,34 +44,35 @@ body[data-theme="dark"] {
 }
 
 body[data-theme="light"] {
-  --page-gradient: linear-gradient(145deg, rgba(79, 105, 231, 0.1), rgba(255, 255, 255, 0.85));
-  --text-primary: #1f2430;
-  --text-muted: #465063;
-  --surface-bg: rgba(255, 255, 255, 0.9);
-  --surface-shadow: 0 20px 45px rgba(46, 54, 80, 0.08);
-  --input-bg: #fff;
-  --input-border: rgba(88, 99, 126, 0.3);
-  --input-text: #1f2430;
-  --card-bg: #fff;
-  --card-border: rgba(63, 135, 255, 0.25);
-  --hint-color: #4f5d78;
-  --counter-color: #465063;
-  --table-border: rgba(88, 99, 126, 0.2);
-  --table-header-bg: rgba(79, 105, 231, 0.08);
-  --table-row-bg: rgba(255, 255, 255, 0.6);
-  --footer-color: #4f5d78;
-  --button-secondary-bg: #fff;
-  --button-secondary-text: #3f4860;
-  --button-secondary-border: rgba(88, 99, 126, 0.3);
-  --button-danger-bg: rgba(239, 68, 68, 0.12);
-  --button-danger-border: rgba(248, 113, 113, 0.55);
+  --page-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --text-primary: #2d3748;
+  --text-muted: #4a5568;
+  --surface-bg: rgba(255, 255, 255, 0.95);
+  --surface-bg-solid: rgba(255, 255, 255, 0.98);
+  --surface-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: rgba(0, 0, 0, 0.15);
+  --input-text: #2d3748;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --hint-color: #4a5568;
+  --counter-color: #4a5568;
+  --table-border: rgba(0, 0, 0, 0.1);
+  --table-header-bg: rgba(0, 0, 0, 0.05);
+  --table-row-bg: rgba(0, 0, 0, 0.02);
+  --footer-color: #718096;
+  --button-secondary-bg: rgba(255, 255, 255, 0.9);
+  --button-secondary-text: #2d3748;
+  --button-secondary-border: rgba(0, 0, 0, 0.15);
+  --button-danger-bg: rgba(239, 68, 68, 0.1);
+  --button-danger-border: rgba(239, 68, 68, 0.3);
   --button-danger-text: #dc2626;
-  --control-shadow: 0 2px 8px rgba(46, 54, 80, 0.08);
+  --control-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   color-scheme: light;
-  --version-color: #000000;
-  --topbar-bg: rgba(255, 255, 255, 0.9);
-  --topbar-border: rgba(88, 99, 126, 0.18);
-  --topbar-shadow: 0 18px 35px rgba(46, 54, 80, 0.14);
+  --version-color: rgba(0, 0, 0, 0.4);
+  --topbar-bg: rgba(255, 255, 255, 0.98);
+  --topbar-border: rgba(0, 0, 0, 0.1);
+  --topbar-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
 }
 
 .top-bar {
@@ -80,9 +82,9 @@ body[data-theme="light"] {
   background: var(--topbar-bg);
   border-bottom: 1px solid var(--topbar-border);
   box-shadow: var(--topbar-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: 0.75rem 1.5rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1rem 1.5rem;
 }
 
 .top-bar__inner {
@@ -163,12 +165,13 @@ main {
 
 header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: center;
+  padding: 2rem 0;
 }
 
 .hero-actions {
@@ -176,32 +179,41 @@ header {
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
+  margin-top: 1rem;
 }
 
 .hero-actions button {
-  min-width: 190px;
+  min-width: 200px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
 }
 
 h1 {
-  font-size: clamp(2.25rem, 5vw, 3rem);
+  font-size: clamp(2.5rem, 6vw, 4rem);
   margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
 }
 
 p.subtitle {
   margin: 0 auto;
-  max-width: 640px;
-  font-size: 1.05rem;
-  line-height: 1.6;
+  max-width: 680px;
+  font-size: 1.15rem;
+  line-height: 1.7;
   color: var(--text-muted);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 section {
   background: var(--surface-bg);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--surface-shadow);
-  padding: 2rem;
-  margin-bottom: 1.75rem;
-  backdrop-filter: blur(8px);
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 h2 {
@@ -220,37 +232,61 @@ ul {
 
 label {
   display: block;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+label .label-text {
+  display: block;
+  margin-bottom: 0.5rem;
 }
 
 input[type="file"],
 input[type="text"],
+input[type="email"],
+input[type="password"],
 select,
 textarea,
 button {
   font: inherit;
-  padding: 0.65rem 0.85rem;
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
   border: 1px solid var(--input-border);
   background-color: var(--input-bg);
   color: var(--input-text);
   box-shadow: var(--control-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 input[type="file"],
 input[type="text"],
+input[type="email"],
+input[type="password"],
 select,
 textarea {
   color: var(--input-text);
 }
 
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
 input::placeholder,
 textarea::placeholder {
   color: var(--text-muted);
+  opacity: 0.7;
 }
 
 textarea {
@@ -266,15 +302,20 @@ button {
   font-weight: 600;
   letter-spacing: 0.02em;
   width: auto;
+  transition: all 0.2s ease;
 }
 
 button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 25px rgba(63, 135, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+button:active {
+  transform: translateY(0);
 }
 
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -289,6 +330,8 @@ button.secondary {
   background: var(--button-secondary-bg);
   color: var(--button-secondary-text);
   border: 1px solid var(--button-secondary-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 button.danger {
@@ -298,11 +341,13 @@ button.danger {
 }
 
 button.secondary:hover {
-  background: rgba(148, 163, 184, 0.15);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 button.danger:hover {
-  background: rgba(220, 38, 38, 0.18);
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
 }
 
 .theme-toggle__icon {
@@ -398,44 +443,46 @@ body[data-theme="light"] .account-card.is-loading::after {
 
 .account-status {
   font-weight: 600;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .account-status--success {
-  background: rgba(34, 197, 94, 0.18);
-  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.5);
   color: #4ade80;
 }
 
 .account-status--error {
   background: rgba(248, 113, 113, 0.2);
-  border-color: rgba(248, 113, 113, 0.45);
+  border-color: rgba(248, 113, 113, 0.5);
   color: #fca5a5;
 }
 
 .account-status--info {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
   color: #93c5fd;
 }
 
 body[data-theme="light"] .account-status--success {
   color: #15803d;
-  background: rgba(34, 197, 94, 0.18);
+  background: rgba(34, 197, 94, 0.2);
 }
 
 body[data-theme="light"] .account-status--error {
   color: #b91c1c;
-  background: rgba(248, 113, 113, 0.18);
+  background: rgba(248, 113, 113, 0.2);
 }
 
 body[data-theme="light"] .account-status--info {
   color: #1d4ed8;
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(59, 130, 246, 0.2);
 }
 
 .account-form {
@@ -481,14 +528,16 @@ body[data-theme="light"] .account-status--info {
 
 .auth-form {
   background: var(--surface-bg);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--surface-shadow);
-  padding: 2rem;
+  padding: 2.5rem;
   margin-bottom: 1.5rem;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
   text-align: left;
 }
 
@@ -528,34 +577,39 @@ body[data-theme="light"] .account-status--info {
 }
 
 .features {
-  margin-top: 2rem;
+  margin-top: 3rem;
 }
 
 .features h2 {
   text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2rem;
+  margin-bottom: 2.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
 .feature-card {
   background: var(--surface-bg);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--surface-shadow);
-  padding: 2rem;
+  padding: 2.5rem;
   text-align: center;
-  backdrop-filter: blur(8px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 24px 50px rgba(2, 6, 23, 0.45);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .feature-icon {
@@ -589,17 +643,24 @@ body[data-theme="light"] .account-status--info {
 .card {
   text-align: center;
   font-size: clamp(1.5rem, 3vw, 2rem);
-  padding: 2.5rem 2rem;
-  border-radius: 20px;
-  border: 2px solid var(--card-border);
+  padding: 3rem 2.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--card-border);
   background: var(--card-bg);
-  box-shadow: 0 18px 35px rgba(2, 6, 23, 0.35);
-  min-height: 240px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  min-height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
   white-space: pre-wrap;
   line-height: 1.6;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
 }
 
 .card__hint {
@@ -632,10 +693,11 @@ body[data-theme="light"] .account-status--info {
 
 .progress-meter__track {
   position: relative;
-  height: 10px;
+  height: 12px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.15);
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .progress-meter__fill {
@@ -645,10 +707,11 @@ body[data-theme="light"] .account-status--info {
   height: 100%;
   width: 0;
   border-radius: inherit;
-  background: linear-gradient(120deg, rgba(63, 135, 255, 0.9), rgba(127, 92, 255, 0.9));
+  background: linear-gradient(120deg, #667eea, #764ba2, #f093fb);
   background-size: 200% 200%;
   animation: shimmer 3s ease infinite;
   transition: width 0.5s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
 @keyframes spinner {
@@ -685,17 +748,27 @@ body[data-theme="light"] .account-status--info {
 }
 
 .set-card {
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 14px;
-  padding: 1.25rem;
-  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  background: var(--surface-bg);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+  box-shadow: var(--surface-shadow);
+}
+
+.set-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 body[data-theme="light"] .set-card {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface-bg);
 }
 
 .set-card__header {
@@ -723,18 +796,27 @@ body[data-theme="light"] .set-card {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   margin: 0 0.5rem 0.5rem 0;
   font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.column-chip:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .column-chip button {
   width: auto;
-  padding: 0.15rem 0.4rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .column-editor,
@@ -789,6 +871,9 @@ body[data-theme="light"] .set-card {
 .empty-state {
   text-align: center;
   color: var(--text-muted);
+  padding: 3rem 2rem;
+  font-size: 1.1rem;
+  opacity: 0.8;
 }
 
 footer {
@@ -869,7 +954,8 @@ textarea.field-error {
 }
 
 /* Required field asterisk after the label text */
-.required-field::after {
+.required-field > span.label-text::after,
+.required-field.inline-label::after {
   content: " *";
   color: #ef4444;
   font-weight: bold;
