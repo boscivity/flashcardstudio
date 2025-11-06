@@ -83,6 +83,7 @@ let currentUser = null;
 let pendingSharedSet = null;
 let legacySets = [];
 let legacySetsPrompted = false;
+let starterSetCreated = false;
 
 // Page navigation
 function navigateTo(page) {
@@ -635,10 +636,20 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
           })
         )
       : [];
-    if (!fetchedSets.length) {
-      const starterSet = createStarterSet();
-      await saveSetToDatabase(starterSet, { silent: true });
-      sets = [starterSet];
+    if (!fetchedSets.length && !starterSetCreated) {
+      // Only try to create starter set once per session to prevent infinite loops
+      // Flag resets on auth change (logout/login) or page refresh to allow retry
+      starterSetCreated = true;
+      try {
+        const starterSet = createStarterSet();
+        await saveSetToDatabase(starterSet, { silent: true });
+        sets = [starterSet];
+      } catch (starterError) {
+        console.error('Could not create starter set', starterError);
+        // Don't show error to user, just leave sets empty
+        // User can refresh page or create their own set
+        sets = [];
+      }
     } else {
       sets = fetchedSets;
     }
@@ -783,6 +794,7 @@ async function handleAuthChange(session) {
   currentSession = session;
   currentUser = session?.user ?? null;
   legacySetsPrompted = false;
+  starterSetCreated = false;
   updateTopBar();
   
   if (!currentUser) {
@@ -894,6 +906,9 @@ async function adoptLegacySetsIfAvailable() {
   legacySetsPrompted = true;
   const shouldImport = confirm('We found sets saved on this device. Do you want to add them to your account?');
   if (!shouldImport) {
+    // User declined, clear the legacy sets so we don't ask again
+    legacySets = [];
+    localStorage.removeItem(storageKey);
     return false;
   }
   try {
@@ -907,7 +922,10 @@ async function adoptLegacySetsIfAvailable() {
     return true;
   } catch (error) {
     console.error('Could not import legacy sets', error);
-    alert('Could not import your locally saved sets. Please try again.');
+    // Clear legacy sets even on error to prevent repeated prompts
+    legacySets = [];
+    localStorage.removeItem(storageKey);
+    alert('Could not import your locally saved sets. The data has been cleared from this device.');
     return false;
   }
 }
