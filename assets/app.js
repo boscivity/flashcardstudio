@@ -41,6 +41,7 @@ const switchToLogInBtn = document.getElementById('switchToLogIn');
 const topAccountStatus = document.getElementById('topAccountStatus');
 const topSignUpBtn = document.getElementById('topSignUpButton');
 const topLogInBtn = document.getElementById('topLogInButton');
+const topDashboardBtn = document.getElementById('topDashboardButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
 const topSettingsBtn = document.getElementById('topSettingsButton');
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
@@ -66,12 +67,10 @@ const changePasswordForm = document.getElementById('changePasswordForm');
 const currentPasswordInput = document.getElementById('currentPassword');
 const newPasswordInput = document.getElementById('newPassword');
 const confirmPasswordInput = document.getElementById('confirmPassword');
-const backToAppBtn = document.getElementById('backToAppButton');
 
 const confettiColors = ['#3f87ff', '#7f5cff', '#22d3ee', '#facc15', '#f472b6', '#a855f7'];
 
 const storageKey = 'flashcardStudioSets';
-const pendingShareStorageKey = 'flashcardStudioPendingShare';
 
 const SUPABASE_URL = 'https://tbydrjbqixrrowriuvjx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRieWRyamJxaXhycm93cml1dmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzODczMjUsImV4cCI6MjA3Nzk2MzMyNX0.HOOtdJw6viZ7OozHo3GvK2Q43o0ekMeW30QwUjUcBT0';
@@ -90,7 +89,6 @@ let currentCard = null;
 
 let currentSession = null;
 let currentUser = null;
-let pendingSharedSet = null;
 let legacySets = [];
 let legacySetsPrompted = false;
 let starterSetCreated = false;
@@ -138,6 +136,7 @@ themeToggleBtn?.addEventListener('click', () => {
   const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
   applyTheme(nextTheme);
   localStorage.setItem('flashcard-studio-theme', nextTheme);
+  persistThemePreference(nextTheme);
 });
 
 brandLink?.addEventListener('click', () => {
@@ -175,6 +174,14 @@ topLogInBtn?.addEventListener('click', () => {
   navigateTo('login');
 });
 
+topDashboardBtn?.addEventListener('click', () => {
+  if (currentUser) {
+    navigateTo('app');
+  } else {
+    navigateTo('home');
+  }
+});
+
 switchToSignUpBtn?.addEventListener('click', () => {
   navigateTo('signup');
 });
@@ -204,10 +211,6 @@ topLogoutBtn?.addEventListener('click', handleSignOut);
 
 topSettingsBtn?.addEventListener('click', () => {
   navigateTo('settings');
-});
-
-backToAppBtn?.addEventListener('click', () => {
-  navigateTo('app');
 });
 
 changePasswordForm?.addEventListener('submit', async event => {
@@ -431,8 +434,6 @@ setsList.addEventListener('click', async event => {
     if (set) {
       openSetEditor('edit', set);
     }
-  } else if (action === 'share') {
-    copyShareLink(setId);
   } else if (action === 'export') {
     exportSetToCsv(setId);
   } else if (action === 'delete') {
@@ -797,6 +798,9 @@ function renderSetsList() {
       const cardLabel = cardCount === 1 ? 'card' : 'cards';
       return `
       <div class="set-card">
+        <button type="button" data-action="delete" data-id="${set.id}" class="set-card__delete" aria-label="Delete set">
+          <span aria-hidden="true">🗑️</span>
+        </button>
         <div class="set-card__header">
           <h3>${escapeHtml(set.name)}</h3>
           <div class="set-card__meta">${cardCount} ${cardLabel} · ${escapeHtml(set.columns.join(', '))}</div>
@@ -804,9 +808,7 @@ function renderSetsList() {
         <div class="set-card__actions">
           <button data-action="study" data-id="${set.id}">Study</button>
           <button data-action="edit" data-id="${set.id}" class="secondary">Edit</button>
-          <button data-action="share" data-id="${set.id}" class="secondary">Copy share link</button>
           <button data-action="export" data-id="${set.id}" class="secondary">Export CSV</button>
-          <button data-action="delete" data-id="${set.id}" class="secondary danger">Delete</button>
         </div>
       </div>
     `;
@@ -816,6 +818,11 @@ function renderSetsList() {
 
 async function handleSignOut() {
   if (!supabase) {
+    currentSession = null;
+    currentUser = null;
+    updateTopBar();
+    renderSetsList();
+    navigateTo('home');
     return;
   }
   try {
@@ -831,7 +838,6 @@ async function handleSignOut() {
 
 async function initializeAccountState() {
   loadLegacySetsFromLocalStorage();
-  restorePendingShareFromStorage();
   
   // Check for auth errors in URL hash
   const hash = window.location.hash.slice(1);
@@ -882,7 +888,6 @@ async function initializeAccountState() {
   supabase.auth.onAuthStateChange(async (_event, session) => {
     await handleAuthChange(session);
   });
-  await handleShareLinkFromUrl();
 }
 
 async function handleAuthChange(session) {
@@ -891,13 +896,13 @@ async function handleAuthChange(session) {
   legacySetsPrompted = false;
   starterSetCreated = false;
   updateTopBar();
-  
+
   if (!currentUser) {
     sets = [];
     renderSetsList();
     return;
   }
-  
+
   // Check if email is verified
   if (!currentUser.email_confirmed_at) {
     // Email not verified, sign out and show message
@@ -906,24 +911,25 @@ async function handleAuthChange(session) {
     navigateTo('login');
     return;
   }
-  
+
+  const userTheme = currentUser.user_metadata?.themePreference;
+  if (userTheme === 'light' || userTheme === 'dark') {
+    applyTheme(userTheme);
+    localStorage.setItem('flashcard-studio-theme', userTheme);
+  }
+
   // User logged in and verified, navigate to app
   navigateTo('app');
-  
+
   await refreshSetsFromDatabase();
-  const importedLegacy = await adoptLegacySetsIfAvailable();
-  if (!importedLegacy) {
-    await handlePendingSharedImport();
-  } else {
-    await refreshSetsFromDatabase();
-    await handlePendingSharedImport();
-  }
+  await adoptLegacySetsIfAvailable();
 }
 
 function updateTopBar() {
   if (currentUser) {
     topLogoutBtn?.classList.remove('hidden');
     topSettingsBtn?.classList.remove('hidden');
+    topDashboardBtn?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
     if (topAccountStatus) {
@@ -933,11 +939,16 @@ function updateTopBar() {
   } else {
     topLogoutBtn?.classList.add('hidden');
     topSettingsBtn?.classList.add('hidden');
+    topDashboardBtn?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
     if (topAccountStatus) {
       topAccountStatus.textContent = 'You are browsing as a guest';
       topAccountStatus.dataset.state = 'guest';
+    }
+    const storedTheme = localStorage.getItem('flashcard-studio-theme');
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      applyTheme(storedTheme);
     }
   }
 }
@@ -1042,105 +1053,6 @@ async function adoptLegacySetsIfAvailable() {
   }
 }
 
-function restorePendingShareFromStorage() {
-  try {
-    const raw = localStorage.getItem(pendingShareStorageKey);
-    pendingSharedSet = raw ? JSON.parse(raw) : null;
-  } catch (error) {
-    console.warn('Could not restore pending shared set', error);
-    pendingSharedSet = null;
-  }
-}
-
-function storePendingSharedSet(payload) {
-  pendingSharedSet = payload;
-  if (!payload) {
-    localStorage.removeItem(pendingShareStorageKey);
-  } else {
-    localStorage.setItem(pendingShareStorageKey, JSON.stringify(payload));
-  }
-}
-
-function clearPendingSharedSet() {
-  pendingSharedSet = null;
-  localStorage.removeItem(pendingShareStorageKey);
-}
-
-async function handlePendingSharedImport() {
-  if (!currentUser || !pendingSharedSet) {
-    return false;
-  }
-  const preparedSet = prepareSharedSet(pendingSharedSet);
-  clearPendingSharedSet();
-  if (!preparedSet) {
-    return false;
-  }
-  const shouldImport = confirm(`Add "${preparedSet.name}" to your sets?`);
-  if (!shouldImport) {
-    return false;
-  }
-  try {
-    await saveSetToDatabase(preparedSet);
-    await refreshSetsFromDatabase();
-    alert(`Added "${preparedSet.name}" to your sets.`);
-    return true;
-  } catch (error) {
-    console.error('Could not import shared set', error);
-    alert('Could not add that shared set to your account. Please try again.');
-    return false;
-  }
-}
-
-async function handleShareLinkFromUrl() {
-  const url = new URL(window.location.href);
-  const shareParam = url.searchParams.get('share');
-  if (!shareParam) {
-    return;
-  }
-  url.searchParams.delete('share');
-  const nextUrl = `${url.pathname}${url.search ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
-  window.history.replaceState({}, '', nextUrl);
-  try {
-    const decoded = decodeBase64(shareParam);
-    const payload = JSON.parse(decoded);
-    storePendingSharedSet(payload);
-    if (currentUser) {
-      await handlePendingSharedImport();
-    } else {
-      alert('Please log in to add the shared set to your account.');
-      navigateTo('login');
-    }
-  } catch (error) {
-    console.error('Could not import shared set', error);
-    alert('Could not import that shared set link. It may have expired or been corrupted.');
-  }
-}
-
-function copyShareLink(setId) {
-  const set = sets.find(candidate => candidate.id === setId);
-  if (!set) {
-    return;
-  }
-  const payload = createShareablePayload(set);
-  const encoded = encodeBase64(JSON.stringify(payload));
-  const url = new URL(window.location.href);
-  url.searchParams.delete('share');
-  url.searchParams.set('share', encoded);
-  const shareUrl = url.toString();
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard
-      .writeText(shareUrl)
-      .then(() => {
-        alert('Share link copied to your clipboard.');
-      })
-      .catch(() => {
-        prompt('Copy this link to share your set:', shareUrl);
-      });
-  } else {
-    prompt('Copy this link to share your set:', shareUrl);
-  }
-}
-
 function exportSetToCsv(setId) {
   const set = sets.find(candidate => candidate.id === setId);
   if (!set) {
@@ -1182,27 +1094,6 @@ function escapeCsvCell(value) {
 function createFileNameFromSet(set) {
   const base = set.name?.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')?.replace(/^-+|-+$/g, '') || 'flashcard-set';
   return `${base}.csv`;
-}
-
-function createShareablePayload(set) {
-  return {
-    version: 1,
-    name: set.name,
-    columns: [...set.columns],
-    templates: { ...set.templates },
-    cards: set.cards.map(card => ({ data: { ...card.data } }))
-  };
-}
-
-function prepareSharedSet(payload) {
-  try {
-    const baseSet = normaliseIncomingSet(payload, { fallbackName: payload?.name || 'Shared set', preserveIds: false });
-    return baseSet;
-  } catch (error) {
-    console.error('Could not prepare shared set', error);
-    alert('The shared set could not be loaded.');
-    return null;
-  }
 }
 
 function normaliseIncomingSet(rawSet, { fallbackName = 'Imported set', preserveIds = false } = {}) {
@@ -1286,24 +1177,6 @@ function createStarterSet() {
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function encodeBase64(text) {
-  const encoded = new TextEncoder().encode(text);
-  let binary = '';
-  encoded.forEach(byte => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
-}
-
-function decodeBase64(value) {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return new TextDecoder().decode(bytes);
 }
 
 function openSetEditor(mode, baseSet) {
@@ -1639,6 +1512,26 @@ function generateCardId() {
     return window.crypto.randomUUID();
   }
   return `card-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function persistThemePreference(theme) {
+  if (!currentUser || !supabase) {
+    return;
+  }
+  if (currentUser.user_metadata?.themePreference === theme) {
+    return;
+  }
+  try {
+    await supabase.auth.updateUser({
+      data: { themePreference: theme }
+    });
+    currentUser.user_metadata = {
+      ...(currentUser.user_metadata || {}),
+      themePreference: theme
+    };
+  } catch (error) {
+    console.error('Could not save theme preference', error);
+  }
 }
 
 function applyTheme(theme) {

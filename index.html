@@ -10,12 +10,13 @@
   <div class="top-bar" role="banner">
     <div class="top-bar__inner">
       <div class="top-bar__brand" id="brandLink" role="button" tabindex="0">
-        <span class="top-bar__logo" aria-hidden="true">⚡</span>
+        <img src="assets/brand-icon.svg" alt="Flashcard Studio icon" class="top-bar__logo-image" />
         <span class="top-bar__title">Flashcard Studio</span>
       </div>
       <div class="top-bar__actions">
         <span id="topAccountStatus" class="top-bar__status" data-state="guest">You are browsing as a guest</span>
         <div class="top-bar__buttons">
+          <button id="topDashboardButton" type="button" class="secondary hidden">Dashboard</button>
           <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
           <button id="topLogInButton" type="button" class="secondary">Log in</button>
           <button id="topLogoutButton" type="button" class="secondary hidden">Log out</button>
@@ -63,11 +64,6 @@
             <div class="feature-icon">⌨️</div>
             <h3>Keyboard Shortcuts</h3>
             <p>Study efficiently with keyboard shortcuts: <strong>1</strong> for known, <strong>2</strong> for unknown.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔗</div>
-            <h3>Share Sets</h3>
-            <p>Generate share links to collaborate with friends or study groups.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">💾</div>
@@ -159,7 +155,7 @@
         </div>
         <div class="flex-row">
           <label class="required-field">
-            Set name
+            <span class="field-label">Set name</span>
             <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
           </label>
         </div>
@@ -177,11 +173,11 @@
           <p class="subtitle" style="font-size: 0.95rem; text-align: left;">Use <code>{{FieldName}}</code> to pull values from your cards. Front and back are required.</p>
           <div class="flex-row">
             <label class="required-field">
-              Front template
+              <span class="field-label">Front template</span>
               <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
             </label>
             <label class="required-field">
-              Back template
+              <span class="field-label">Back template</span>
               <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
             </label>
           </div>
@@ -265,30 +261,26 @@
           <h3>Account Security</h3>
           <form id="changePasswordForm" class="settings-form">
             <label class="required-field">
-              Current Password
+              <span class="field-label">Current Password</span>
               <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Your current password" required />
             </label>
             <label class="required-field">
-              New Password
+              <span class="field-label">New Password</span>
               <input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
             </label>
             <label class="required-field">
-              Confirm New Password
+              <span class="field-label">Confirm New Password</span>
               <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" minlength="8" required />
             </label>
             <button type="submit">Change Password</button>
           </form>
-        </div>
-        
-        <div class="actions">
-          <button id="backToAppButton" type="button" class="secondary back-button">Back to Sets</button>
         </div>
       </section>
     </main>
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.4</div>
+  <div class="version-badge" aria-label="Version">v1.6.5</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
