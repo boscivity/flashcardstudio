@@ -938,11 +938,12 @@ async function handleAuthChange(session, eventType = null) {
 
   const isAppVisible = appPage && !appPage.classList.contains('hidden');
   const isSettingsVisible = settingsPage && !settingsPage.classList.contains('hidden');
+  const shouldSkipAutoNavigate = eventType === 'USER_UPDATED';
 
   // User logged in and verified, navigate to app unless they are already on
-  // a protected page (app or settings). This avoids redirecting users away
-  // from settings when their session updates (e.g. saving theme preference).
-  if (!isAppVisible && !isSettingsVisible) {
+  // a protected page (app or settings) or the session update was triggered by
+  // a profile change such as updating the theme preference.
+  if (!shouldSkipAutoNavigate && !isAppVisible && !isSettingsVisible) {
     navigateTo('app');
   }
 
