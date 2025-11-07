@@ -107,7 +107,7 @@ function navigateTo(page) {
   appPage?.classList.add('hidden');
   settingsPage?.classList.add('hidden');
   
-  // Update active nav button
+  // Update active nav button - always clear first
   topDashboardBtn?.classList.remove('active');
   topSettingsBtn?.classList.remove('active');
   
@@ -122,11 +122,13 @@ function navigateTo(page) {
     signupPage?.classList.remove('hidden');
     window.history.pushState({ page: 'signup' }, '', '#signup');
     setTimeout(() => signUpEmailInput?.focus(), 100);
-  } else if (page === 'app') {
+  } else if (page === 'app' && currentUser) {
+    // Only activate if user is logged in
     appPage?.classList.remove('hidden');
     topDashboardBtn?.classList.add('active');
     window.history.pushState({ page: 'app' }, '', '#app');
-  } else if (page === 'settings') {
+  } else if (page === 'settings' && currentUser) {
+    // Only activate if user is logged in
     settingsPage?.classList.remove('hidden');
     topSettingsBtn?.classList.add('active');
     window.history.pushState({ page: 'settings' }, '', '#settings');
@@ -325,8 +327,11 @@ signUpForm?.addEventListener('submit', async event => {
       return;
     }
     // Supabase returns a user object with empty identities array when signup is attempted
-    // with an email that already exists but hasn't been confirmed yet
-    if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
+    // with an email that already exists but hasn't been confirmed yet.
+    // An empty identities array means the user was created but the email provider identity
+    // was not attached, which happens when the email is already taken by another account.
+    const hasNoIdentities = !data.user.identities || data.user.identities.length === 0;
+    if (data?.user && hasNoIdentities) {
       setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
       return;
     }
