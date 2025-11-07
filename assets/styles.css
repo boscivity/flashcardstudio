@@ -663,29 +663,57 @@ body[data-theme="light"] .account-status--info {
 }
 
 #knowButton {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #fff;
-  box-shadow: 0 12px 28px rgba(34, 197, 94, 0.35);
-  border: none;
+  background: rgba(22, 163, 74, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  color: #86efac;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.45);
 }
 
 #knowButton:hover,
 #knowButton:focus-visible {
-  box-shadow: 0 0 18px rgba(34, 197, 94, 0.6);
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  background: rgba(21, 128, 61, 0.26);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.7);
+  transform: translateY(-1px);
 }
 
 #dontKnowButton {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #fff;
-  box-shadow: 0 12px 28px rgba(248, 113, 113, 0.4);
-  border: none;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+  box-shadow: 0 0 14px rgba(248, 113, 113, 0.45);
 }
 
 #dontKnowButton:hover,
 #dontKnowButton:focus-visible {
-  box-shadow: 0 0 18px rgba(248, 113, 113, 0.65);
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: rgba(220, 38, 38, 0.26);
+  box-shadow: 0 0 18px rgba(248, 113, 113, 0.7);
+  transform: translateY(-1px);
+}
+
+body[data-theme="light"] #knowButton {
+  background: rgba(187, 247, 208, 0.55);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #047857;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+}
+
+body[data-theme="light"] #knowButton:hover,
+body[data-theme="light"] #knowButton:focus-visible {
+  background: rgba(134, 239, 172, 0.6);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.6);
+}
+
+body[data-theme="light"] #dontKnowButton {
+  background: rgba(254, 202, 202, 0.55);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #b91c1c;
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
+}
+
+body[data-theme="light"] #dontKnowButton:hover,
+body[data-theme="light"] #dontKnowButton:focus-visible {
+  background: rgba(254, 178, 178, 0.65);
+  box-shadow: 0 0 18px rgba(248, 113, 113, 0.6);
 }
 
 .progress-meter {
@@ -756,11 +784,9 @@ body[data-theme="light"] .account-status--info {
 }
 
 .set-card {
-  position: relative;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 14px;
   padding: 1.25rem;
-  padding-right: 3.75rem;
   background: rgba(15, 23, 42, 0.55);
   display: flex;
   flex-direction: column;
@@ -774,7 +800,21 @@ body[data-theme="light"] .set-card {
 .set-card__header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
+}
+
+.set-card__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.set-card__title-row h3 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .set-card__meta {
@@ -789,9 +829,6 @@ body[data-theme="light"] .set-card {
 }
 
 .set-card__delete {
-  position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
   width: 2.5rem;
   height: 2.5rem;
   display: inline-flex;
@@ -802,13 +839,15 @@ body[data-theme="light"] .set-card {
   border: 1px solid rgba(239, 68, 68, 0.45);
   background: rgba(239, 68, 68, 0.16);
   color: #ef4444;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  flex: 0 0 auto;
 }
 
 .set-card__delete:hover,
 .set-card__delete:focus-visible {
   background: rgba(239, 68, 68, 0.24);
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+  transform: translateY(-1px);
 }
 
 body[data-theme="light"] .set-card__delete {
@@ -820,6 +859,7 @@ body[data-theme="light"] .set-card__delete:hover,
 body[data-theme="light"] .set-card__delete:focus-visible {
   background: rgba(239, 68, 68, 0.2);
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
 }
 
 .set-card__actions button {
