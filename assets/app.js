@@ -44,8 +44,6 @@ const topLogInBtn = document.getElementById('topLogInButton');
 const topDashboardBtn = document.getElementById('topDashboardButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
 const topSettingsBtn = document.getElementById('topSettingsButton');
-const topNavTabs = document.getElementById('topNavTabs');
-const topNavTabButtons = topNavTabs ? Array.from(topNavTabs.querySelectorAll('[data-page-target]')) : [];
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
 const brandLink = document.getElementById('brandLink');
 
@@ -96,45 +94,28 @@ let legacySetsPrompted = false;
 let starterSetCreated = false;
 
 // Page navigation
-function setActiveTopTab(page) {
-  topNavTabButtons.forEach(button => {
-    const target = button.dataset.pageTarget;
-    const isActive = Boolean(page) && target === page;
-    button.classList.toggle('top-bar__tab--active', isActive);
-    if (isActive) {
-      button.setAttribute('aria-current', 'page');
-    } else {
-      button.removeAttribute('aria-current');
-    }
-  });
-}
-
 function navigateTo(page) {
-  const restrictedPages = ['app', 'settings'];
-  const target = !currentUser && restrictedPages.includes(page) ? 'home' : page;
   homePage?.classList.add('hidden');
   loginPage?.classList.add('hidden');
   signupPage?.classList.add('hidden');
   appPage?.classList.add('hidden');
   settingsPage?.classList.add('hidden');
-
-  setActiveTopTab(restrictedPages.includes(target) ? target : null);
-
-  if (target === 'home') {
+  
+  if (page === 'home') {
     homePage?.classList.remove('hidden');
     window.history.pushState({ page: 'home' }, '', '#home');
-  } else if (target === 'login') {
+  } else if (page === 'login') {
     loginPage?.classList.remove('hidden');
     window.history.pushState({ page: 'login' }, '', '#login');
     setTimeout(() => logInEmailInput?.focus(), 100);
-  } else if (target === 'signup') {
+  } else if (page === 'signup') {
     signupPage?.classList.remove('hidden');
     window.history.pushState({ page: 'signup' }, '', '#signup');
     setTimeout(() => signUpEmailInput?.focus(), 100);
-  } else if (target === 'app') {
+  } else if (page === 'app') {
     appPage?.classList.remove('hidden');
     window.history.pushState({ page: 'app' }, '', '#app');
-  } else if (target === 'settings') {
+  } else if (page === 'settings') {
     settingsPage?.classList.remove('hidden');
     window.history.pushState({ page: 'settings' }, '', '#settings');
   }
@@ -159,13 +140,21 @@ themeToggleBtn?.addEventListener('click', () => {
 });
 
 brandLink?.addEventListener('click', () => {
-  navigateTo('home');
+  if (currentUser) {
+    navigateTo('app');
+  } else {
+    navigateTo('home');
+  }
 });
 
 brandLink?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    navigateTo('home');
+    if (currentUser) {
+      navigateTo('app');
+    } else {
+      navigateTo('home');
+    }
   }
 });
 
@@ -186,7 +175,11 @@ topLogInBtn?.addEventListener('click', () => {
 });
 
 topDashboardBtn?.addEventListener('click', () => {
-  navigateTo('app');
+  if (currentUser) {
+    navigateTo('app');
+  } else {
+    navigateTo('home');
+  }
 });
 
 switchToSignUpBtn?.addEventListener('click', () => {
@@ -324,10 +317,6 @@ signUpForm?.addEventListener('submit', async event => {
       } else {
         setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
       }
-      return;
-    }
-    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-      setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
       return;
     }
     signUpForm.reset();
@@ -828,22 +817,22 @@ function renderSetsList() {
 }
 
 async function handleSignOut() {
-  try {
-    if (supabase) {
-      const { error } = await supabase.auth.signOut();
-      if (error && !/session/i.test(error.message || '')) {
-        throw error;
-      }
-    }
-  } catch (error) {
-    console.error('Could not sign out', error);
-  } finally {
+  if (!supabase) {
     currentSession = null;
     currentUser = null;
-    sets = [];
     updateTopBar();
     renderSetsList();
     navigateTo('home');
+    return;
+  }
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+    navigateTo('home');
+  } catch (error) {
+    console.error('Could not sign out', error);
   }
 }
 
@@ -941,7 +930,6 @@ function updateTopBar() {
     topLogoutBtn?.classList.remove('hidden');
     topSettingsBtn?.classList.remove('hidden');
     topDashboardBtn?.classList.remove('hidden');
-    topNavTabs?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
     if (topAccountStatus) {
@@ -952,14 +940,12 @@ function updateTopBar() {
     topLogoutBtn?.classList.add('hidden');
     topSettingsBtn?.classList.add('hidden');
     topDashboardBtn?.classList.add('hidden');
-    topNavTabs?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
     if (topAccountStatus) {
       topAccountStatus.textContent = 'You are browsing as a guest';
       topAccountStatus.dataset.state = 'guest';
     }
-    setActiveTopTab(null);
     const storedTheme = localStorage.getItem('flashcard-studio-theme');
     if (storedTheme === 'light' || storedTheme === 'dark') {
       applyTheme(storedTheme);
