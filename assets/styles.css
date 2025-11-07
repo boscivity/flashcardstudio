@@ -125,16 +125,84 @@ body[data-theme="light"] {
   opacity: 0.8;
 }
 
-.top-bar__actions {
+.top-bar__right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: flex-end;
+  gap: 1.75rem;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+}
+
+.top-bar__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.top-bar__tab {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.75rem;
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  position: relative;
+  box-shadow: none;
+  transform: none;
+  transition: color 0.2s ease;
+}
+
+.top-bar__tab:hover,
+.top-bar__tab:focus-visible {
+  color: var(--text-primary);
+  box-shadow: none;
+  transform: none;
+}
+
+.top-bar__tab:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.65);
+  outline-offset: 2px;
+}
+
+.top-bar__tab::after {
+  content: "";
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 0.3rem;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.85);
+  opacity: 0;
+  transform: scaleX(0.3);
+  transform-origin: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.top-bar__tab--active {
+  color: var(--text-primary);
+}
+
+.top-bar__tab--active::after,
+.top-bar__tab:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.top-bar__account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .top-bar__status {
   font-size: 0.85rem;
   color: var(--text-muted);
-  margin-right: 0.5rem;
+  margin-right: 0;
 }
 
 .top-bar__status[data-state="success"],
@@ -153,11 +221,17 @@ body[data-theme="light"] {
 .top-bar__buttons {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .top-bar__buttons button {
   flex: 0 0 auto;
   min-width: 90px;
+}
+
+.top-bar__signout {
+  min-width: 0;
+  padding: 0.5rem 1rem;
 }
 
 main {
@@ -300,6 +374,7 @@ button.danger {
   background: var(--button-danger-bg);
   color: var(--button-danger-text);
   border: 1px solid var(--button-danger-border);
+  box-shadow: none;
 }
 
 button.secondary:hover {
@@ -307,7 +382,14 @@ button.secondary:hover {
 }
 
 button.danger:hover {
-  background: rgba(220, 38, 38, 0.18);
+  background: rgba(239, 68, 68, 0.22);
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.28);
+}
+
+button.danger:focus-visible {
+  outline: 2px solid rgba(239, 68, 68, 0.55);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.1);
 }
 
 .theme-toggle__icon {
@@ -693,8 +775,7 @@ body[data-theme="light"] .account-status--info {
   position: relative;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 14px;
-  padding: 1.25rem;
-  padding-top: 2.75rem;
+  padding: 1.5rem;
   background: rgba(15, 23, 42, 0.55);
   display: flex;
   flex-direction: column;
@@ -724,8 +805,8 @@ body[data-theme="light"] .set-card {
 
 .set-card__delete {
   position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
+  top: 0.75rem;
+  right: 0.75rem;
   width: 2.5rem;
   height: 2.5rem;
   display: inline-flex;
@@ -736,13 +817,20 @@ body[data-theme="light"] .set-card {
   border: 1px solid rgba(239, 68, 68, 0.45);
   background: rgba(239, 68, 68, 0.16);
   color: #ef4444;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
 }
 
 .set-card__delete:hover,
 .set-card__delete:focus-visible {
   background: rgba(239, 68, 68, 0.24);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(239, 68, 68, 0.32);
+}
+
+.set-card__delete:focus-visible {
+  outline: 2px solid rgba(239, 68, 68, 0.5);
+  outline-offset: 2px;
 }
 
 body[data-theme="light"] .set-card__delete {
@@ -753,6 +841,7 @@ body[data-theme="light"] .set-card__delete {
 body[data-theme="light"] .set-card__delete:hover,
 body[data-theme="light"] .set-card__delete:focus-visible {
   background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 14px 32px rgba(239, 68, 68, 0.25);
 }
 
 .set-card__actions button {
@@ -877,10 +966,20 @@ footer {
     gap: 0.75rem;
   }
 
-  .top-bar__actions {
+  .top-bar__right {
     width: 100%;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .top-bar__tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .top-bar__account {
+    flex: 1 1 auto;
   }
 
   .top-bar__status {
