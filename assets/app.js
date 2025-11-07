@@ -93,6 +93,8 @@ let originalDeck = [];
 let deck = [];
 let currentCard = null;
 
+let sessionExpirationHandled = false;
+
 let currentSession = null;
 let currentUser = null;
 let legacySets = [];
@@ -578,6 +580,10 @@ setsList.addEventListener('click', async event => {
         await refreshSetsFromDatabase();
       } catch (error) {
         console.error('Could not delete set', error);
+        if (isAuthSessionExpiredError(error)) {
+          await handleSessionExpiration();
+          return;
+        }
         alert('Could not delete that set. Please try again.');
       }
     }
@@ -762,6 +768,10 @@ saveSetBtn.addEventListener('click', async () => {
     closeSetEditor();
   } catch (error) {
     console.error('Could not save set', error);
+    if (isAuthSessionExpiredError(error)) {
+      await handleSessionExpiration();
+      return;
+    }
     alert('Could not save your set. Please try again.');
   }
 });
@@ -773,8 +783,6 @@ backButton.addEventListener('click', () => {
 showAnswerBtn.addEventListener('click', () => {
   if (!currentCard) return;
   cardText.textContent = renderTemplate(activeTemplates.back, currentCard.data);
-  const hint = renderTemplate(activeTemplates.hint, currentCard.data).trim();
-  cardHint.textContent = hint ? `Hint: ${hint}` : '';
   showAnswerBtn.classList.add('hidden');
   knowBtn.classList.remove('hidden');
   dontKnowBtn.classList.remove('hidden');
@@ -885,6 +893,10 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
     renderSetsList();
   } catch (error) {
     console.error('Could not load sets', error);
+    if (isAuthSessionExpiredError(error)) {
+      await handleSessionExpiration();
+      return;
+    }
     sets = [];
     renderSetsList();
   }
@@ -993,6 +1005,11 @@ async function handleSignOut() {
     navigateTo('home');
   } catch (error) {
     console.error('Could not sign out', error);
+    if (isAuthSessionExpiredError(error)) {
+      await handleSessionExpiration({ showAlert: false });
+      return;
+    }
+    alert('Could not sign out. Please try again.');
   }
 }
 
@@ -1055,6 +1072,9 @@ async function handleAuthChange(session, eventType = null) {
   currentUser = session?.user ?? null;
   legacySetsPrompted = false;
   starterSetCreated = false;
+  if (currentUser) {
+    sessionExpirationHandled = false;
+  }
   updateTopBar();
 
   if (!currentUser) {
@@ -1091,6 +1111,41 @@ async function handleAuthChange(session, eventType = null) {
 
   await refreshSetsFromDatabase();
   await adoptLegacySetsIfAvailable();
+}
+
+function isAuthSessionExpiredError(error) {
+  if (!error) {
+    return false;
+  }
+  const status = error.status || error.code;
+  if (status === 401 || status === '401') {
+    return true;
+  }
+  const message = String(
+    error.message ||
+      error.error_description ||
+      (typeof error.body === 'object' ? error.body?.message || error.body?.error_description : '') ||
+      ''
+  ).toLowerCase();
+  if (!message) {
+    return false;
+  }
+  if (message.includes('auth session missing') || message.includes('jwt expired') || message.includes('invalid jwt')) {
+    return true;
+  }
+  return message.includes('session') && message.includes('expired');
+}
+
+async function handleSessionExpiration({ showAlert = true } = {}) {
+  if (sessionExpirationHandled) {
+    return;
+  }
+  sessionExpirationHandled = true;
+  if (showAlert) {
+    alert('Your session has expired. Please log in again.');
+  }
+  await handleAuthChange(null, 'SIGNED_OUT');
+  navigateTo('login');
 }
 
 function updateTopBar() {
@@ -1495,7 +1550,8 @@ function prepareNextCard() {
   }
   currentCard = deck[0];
   cardText.textContent = renderTemplate(activeTemplates.front, currentCard.data);
-  cardHint.textContent = '';
+  const hint = renderTemplate(activeTemplates.hint, currentCard.data).trim();
+  cardHint.textContent = hint ? `Hint: ${hint}` : '';
   showAnswerBtn.classList.remove('hidden');
   knowBtn.classList.add('hidden');
   dontKnowBtn.classList.add('hidden');
