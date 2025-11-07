@@ -150,6 +150,43 @@ body[data-theme="light"] {
   color: #60a5fa;
 }
 
+.top-bar__nav {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.top-bar__nav-tab {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  border-radius: 0;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: auto;
+  min-width: auto;
+}
+
+.top-bar__nav-tab:hover {
+  color: var(--text-primary);
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+.top-bar__nav-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: #3f87ff;
+}
+
 .top-bar__buttons {
   display: flex;
   gap: 0.5rem;
@@ -743,6 +780,7 @@ body[data-theme="light"] .set-card {
 .set-card__delete:focus-visible {
   background: rgba(239, 68, 68, 0.24);
   transform: translateY(-1px);
+  box-shadow: 0 12px 25px rgba(239, 68, 68, 0.3);
 }
 
 body[data-theme="light"] .set-card__delete {
@@ -753,6 +791,7 @@ body[data-theme="light"] .set-card__delete {
 body[data-theme="light"] .set-card__delete:hover,
 body[data-theme="light"] .set-card__delete:focus-visible {
   background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 12px 25px rgba(239, 68, 68, 0.25);
 }
 
 .set-card__actions button {
