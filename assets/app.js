@@ -134,22 +134,10 @@ const storedTheme = localStorage.getItem('flashcard-studio-theme');
 const initialTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
 applyTheme(initialTheme);
 
-themeToggleBtn?.addEventListener('click', async () => {
+themeToggleBtn?.addEventListener('click', () => {
   const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
   applyTheme(nextTheme);
   localStorage.setItem('flashcard-studio-theme', nextTheme);
-  
-  // Save theme preference to user account if logged in
-  if (currentUser && supabase) {
-    try {
-      await supabase.auth.updateUser({
-        data: { theme: nextTheme }
-      });
-    } catch (error) {
-      console.error('Failed to save theme preference to user account:', error.message || error);
-      // Continue anyway, theme is saved locally as fallback
-    }
-  }
 });
 
 brandLink?.addEventListener('click', () => {
@@ -443,6 +431,8 @@ setsList.addEventListener('click', async event => {
     if (set) {
       openSetEditor('edit', set);
     }
+  } else if (action === 'share') {
+    copyShareLink(setId);
   } else if (action === 'export') {
     exportSetToCsv(setId);
   } else if (action === 'delete') {
@@ -814,6 +804,7 @@ function renderSetsList() {
         <div class="set-card__actions">
           <button data-action="study" data-id="${set.id}">Study</button>
           <button data-action="edit" data-id="${set.id}" class="secondary">Edit</button>
+          <button data-action="share" data-id="${set.id}" class="secondary">Copy share link</button>
           <button data-action="export" data-id="${set.id}" class="secondary">Export CSV</button>
           <button data-action="delete" data-id="${set.id}" class="secondary danger">Delete</button>
         </div>
@@ -825,25 +816,16 @@ function renderSetsList() {
 
 async function handleSignOut() {
   if (!supabase) {
-    console.error('Sign out failed: Supabase client not initialized');
-    alert('Unable to sign out. The authentication service is not available. Please refresh the page and try again.');
     return;
   }
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Sign out failed with Supabase error:', error.message || error);
-      alert('Could not sign out due to a server error. Please try again or refresh the page.');
-      return;
+      throw error;
     }
-    // Clear local state
-    currentSession = null;
-    currentUser = null;
-    sets = [];
     navigateTo('home');
   } catch (error) {
-    console.error('Sign out failed with unexpected error:', error.message || error);
-    alert('An unexpected error occurred while signing out. Please refresh the page and try again.');
+    console.error('Could not sign out', error);
   }
 }
 
@@ -923,13 +905,6 @@ async function handleAuthChange(session) {
     alert('Please verify your email address before logging in. Check your inbox for the confirmation link.');
     navigateTo('login');
     return;
-  }
-  
-  // Load user's theme preference
-  const userTheme = currentUser.user_metadata?.theme;
-  if (userTheme === 'light' || userTheme === 'dark') {
-    applyTheme(userTheme);
-    localStorage.setItem('flashcard-studio-theme', userTheme);
   }
   
   // User logged in and verified, navigate to app
@@ -1122,41 +1097,48 @@ async function handleShareLinkFromUrl() {
   if (!shareParam) {
     return;
   }
-  // Clean up the URL
   url.searchParams.delete('share');
   const nextUrl = `${url.pathname}${url.search ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
   window.history.replaceState({}, '', nextUrl);
-  
-  // Log deprecation and show a more user-friendly message
-  console.warn('Share links are deprecated. Detected share parameter in URL but ignoring it.');
-  
-  // Show a brief notification to the user
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(30, 30, 60, 0.95);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(20px);
-    z-index: 1000;
-    font-size: 0.95rem;
-    max-width: 90%;
-    text-align: center;
-  `;
-  notification.textContent = 'Share links are no longer supported. Please use CSV export to share sets.';
-  document.body.appendChild(notification);
-  
-  // Auto-remove after 5 seconds
-  setTimeout(() => {
-    notification.style.opacity = '0';
-    notification.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => notification.remove(), 300);
-  }, 5000);
+  try {
+    const decoded = decodeBase64(shareParam);
+    const payload = JSON.parse(decoded);
+    storePendingSharedSet(payload);
+    if (currentUser) {
+      await handlePendingSharedImport();
+    } else {
+      alert('Please log in to add the shared set to your account.');
+      navigateTo('login');
+    }
+  } catch (error) {
+    console.error('Could not import shared set', error);
+    alert('Could not import that shared set link. It may have expired or been corrupted.');
+  }
+}
+
+function copyShareLink(setId) {
+  const set = sets.find(candidate => candidate.id === setId);
+  if (!set) {
+    return;
+  }
+  const payload = createShareablePayload(set);
+  const encoded = encodeBase64(JSON.stringify(payload));
+  const url = new URL(window.location.href);
+  url.searchParams.delete('share');
+  url.searchParams.set('share', encoded);
+  const shareUrl = url.toString();
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        alert('Share link copied to your clipboard.');
+      })
+      .catch(() => {
+        prompt('Copy this link to share your set:', shareUrl);
+      });
+  } else {
+    prompt('Copy this link to share your set:', shareUrl);
+  }
 }
 
 function exportSetToCsv(setId) {
