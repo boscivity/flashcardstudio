@@ -326,10 +326,10 @@ signUpForm?.addEventListener('submit', async event => {
       }
       return;
     }
-    // Supabase returns a user object with empty identities array when signup is attempted
-    // with an email that already exists but hasn't been confirmed yet.
-    // An empty identities array means the user was created but the email provider identity
-    // was not attached, which happens when the email is already taken by another account.
+    // Additional check for duplicate email: Supabase sometimes returns a user object
+    // with an empty identities array when signup is attempted with an email that already
+    // exists. This prevents confusing the user with a "success" message when the account
+    // wasn't actually created. An empty identities array means no auth provider was linked.
     if (data?.user) {
       const hasNoIdentities = !data.user.identities || data.user.identities.length === 0;
       if (hasNoIdentities) {
