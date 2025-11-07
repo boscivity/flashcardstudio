@@ -816,11 +816,13 @@ function renderSetsList() {
       const cardLabel = cardCount === 1 ? 'card' : 'cards';
       return `
       <div class="set-card">
-        <button type="button" data-action="delete" data-id="${set.id}" class="set-card__delete" aria-label="Delete set">
-          <span aria-hidden="true">🗑️</span>
-        </button>
         <div class="set-card__header">
-          <h3>${escapeHtml(set.name)}</h3>
+          <div class="set-card__title-row">
+            <h3>${escapeHtml(set.name)}</h3>
+            <button type="button" data-action="delete" data-id="${set.id}" class="set-card__delete" aria-label="Delete set">
+              <span aria-hidden="true">🗑️</span>
+            </button>
+          </div>
           <div class="set-card__meta">${cardCount} ${cardLabel} · ${escapeHtml(set.columns.join(', '))}</div>
         </div>
         <div class="set-card__actions">
