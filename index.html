@@ -16,7 +16,16 @@
       </div>
       <div class="top-bar__actions">
         <span id="topAccountStatus" class="top-bar__status" data-state="guest">You are browsing as a guest</span>
-        <div class="top-bar__buttons">
+        <button
+          id="topMenuToggle"
+          type="button"
+          class="top-bar__menu-toggle"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="top-bar__menu-icon" aria-hidden="true"></span>
+        </button>
+        <div class="top-bar__buttons" id="topMenuPanel">
           <div class="top-bar__nav-group hidden" id="topNavGroup">
             <button id="topDashboardButton" type="button" class="secondary nav-button">Dashboard</button>
             <button id="topSettingsButton" type="button" class="secondary nav-button" aria-label="Settings">
@@ -282,7 +291,7 @@
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.9</div>
+  <div class="version-badge" aria-label="Version">v1.6.10</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>

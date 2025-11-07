@@ -45,8 +45,13 @@ const topDashboardBtn = document.getElementById('topDashboardButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
 const topSettingsBtn = document.getElementById('topSettingsButton');
 const topNavGroup = document.getElementById('topNavGroup');
+const topMenuToggle = document.getElementById('topMenuToggle');
+const topMenuPanel = document.getElementById('topMenuPanel');
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
 const brandLink = document.getElementById('brandLink');
+const topBar = document.querySelector('.top-bar');
+
+const mobileMenuQuery = typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 720px)') : null;
 
 const studySection = document.getElementById('study');
 const studySetTitle = document.getElementById('studySetTitle');
@@ -94,8 +99,118 @@ let legacySets = [];
 let legacySetsPrompted = false;
 let starterSetCreated = false;
 
+function isMobileMenuActive() {
+  return mobileMenuQuery?.matches ?? window.innerWidth <= 720;
+}
+
+function updateTopBarOffset() {
+  if (!topBar) return;
+  const height = Math.round(topBar.getBoundingClientRect().height);
+  if (height > 0) {
+    document.documentElement.style.setProperty('--topbar-offset', `${height}px`);
+  }
+}
+
+function setTopMenuOpen(open, { immediate = false } = {}) {
+  if (!topMenuToggle || !topMenuPanel) return;
+
+  const mobileEnabled = isMobileMenuActive();
+  if (!mobileEnabled) {
+    topMenuToggle.setAttribute('aria-expanded', 'false');
+    topMenuPanel.classList.remove('is-open');
+    topMenuPanel.style.removeProperty('max-height');
+    updateTopBarOffset();
+    return;
+  }
+
+  const currentlyExpanded = topMenuToggle.getAttribute('aria-expanded') === 'true';
+  if (open === currentlyExpanded && !immediate) {
+    if (open) {
+      topMenuPanel.style.maxHeight = `${topMenuPanel.scrollHeight}px`;
+    }
+    return;
+  }
+
+  topMenuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+  if (open) {
+    topMenuPanel.classList.add('is-open');
+    if (immediate) {
+      topMenuPanel.style.removeProperty('max-height');
+      updateTopBarOffset();
+      return;
+    }
+    topMenuPanel.style.maxHeight = '0px';
+    requestAnimationFrame(() => {
+      topMenuPanel.style.maxHeight = `${topMenuPanel.scrollHeight}px`;
+    });
+    const handleOpenTransitionEnd = event => {
+      if (event.propertyName !== 'max-height') return;
+      topMenuPanel.removeEventListener('transitionend', handleOpenTransitionEnd);
+      if (topMenuToggle.getAttribute('aria-expanded') === 'true') {
+        topMenuPanel.style.removeProperty('max-height');
+        updateTopBarOffset();
+      }
+    };
+    topMenuPanel.addEventListener('transitionend', handleOpenTransitionEnd);
+  } else {
+    if (immediate) {
+      topMenuPanel.classList.remove('is-open');
+      topMenuPanel.style.removeProperty('max-height');
+      updateTopBarOffset();
+      return;
+    }
+    const currentHeight = topMenuPanel.scrollHeight;
+    topMenuPanel.style.maxHeight = `${currentHeight}px`;
+    requestAnimationFrame(() => {
+      topMenuPanel.style.maxHeight = '0px';
+    });
+    const handleCloseTransitionEnd = event => {
+      if (event.propertyName !== 'max-height') return;
+      topMenuPanel.removeEventListener('transitionend', handleCloseTransitionEnd);
+      if (topMenuToggle.getAttribute('aria-expanded') !== 'true') {
+        topMenuPanel.classList.remove('is-open');
+        topMenuPanel.style.removeProperty('max-height');
+        updateTopBarOffset();
+      }
+    };
+    topMenuPanel.addEventListener('transitionend', handleCloseTransitionEnd);
+  }
+}
+
+topMenuToggle?.addEventListener('click', () => {
+  const isExpanded = topMenuToggle.getAttribute('aria-expanded') === 'true';
+  setTopMenuOpen(!isExpanded);
+});
+
+const handleMobileMenuChange = () => {
+  if (!isMobileMenuActive()) {
+    setTopMenuOpen(false, { immediate: true });
+  } else if (topMenuToggle?.getAttribute('aria-expanded') === 'true') {
+    setTopMenuOpen(true, { immediate: true });
+  }
+  updateTopBarOffset();
+};
+
+if (mobileMenuQuery && typeof mobileMenuQuery.addEventListener === 'function') {
+  mobileMenuQuery.addEventListener('change', handleMobileMenuChange);
+} else if (mobileMenuQuery && typeof mobileMenuQuery.addListener === 'function') {
+  mobileMenuQuery.addListener(handleMobileMenuChange);
+}
+
+window.addEventListener('resize', () => {
+  if (!isMobileMenuActive()) {
+    setTopMenuOpen(false, { immediate: true });
+  }
+  updateTopBarOffset();
+});
+
+handleMobileMenuChange();
+window.addEventListener('load', updateTopBarOffset);
+
 // Page navigation
 function navigateTo(page) {
+  setTopMenuOpen(false);
   // Redirect to home if not logged in and trying to access protected pages
   if (!currentUser && (page === 'app' || page === 'settings')) {
     page = 'home';
@@ -748,13 +863,15 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
           })
         )
       : [];
-    if (!fetchedSets.length && !starterSetCreated) {
+    const hasProvisionedStarterSet = hasStarterSetProvisioned();
+    if (!fetchedSets.length && !starterSetCreated && !hasProvisionedStarterSet) {
       // Only try to create starter set once per session to prevent infinite loops
       // Flag resets on auth change (logout/login) or page refresh to allow retry
       starterSetCreated = true;
       try {
         const starterSet = createStarterSet();
         await saveSetToDatabase(starterSet, { silent: true });
+        await markStarterSetProvisioned();
         sets = [starterSet];
       } catch (starterError) {
         console.error('Could not create starter set', starterError);
@@ -770,6 +887,29 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
     console.error('Could not load sets', error);
     sets = [];
     renderSetsList();
+  }
+}
+
+function hasStarterSetProvisioned() {
+  return Boolean(currentUser?.user_metadata?.starter_set_provisioned);
+}
+
+async function markStarterSetProvisioned() {
+  if (!supabase || !currentUser) {
+    return;
+  }
+  try {
+    const { data, error } = await supabase.auth.updateUser({
+      data: { starter_set_provisioned: true }
+    });
+    if (error) {
+      throw error;
+    }
+    if (data?.user) {
+      currentUser = data.user;
+    }
+  } catch (error) {
+    console.error('Could not update starter set provisioning state', error);
   }
 }
 
@@ -977,6 +1117,8 @@ function updateTopBar() {
       applyTheme(storedTheme);
     }
   }
+  setTopMenuOpen(false, { immediate: true });
+  updateTopBarOffset();
 }
 
 function setLoginStatusMessage(message, type = 'info') {
