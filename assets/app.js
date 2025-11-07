@@ -96,7 +96,7 @@ let starterSetCreated = false;
 
 // Page navigation
 function navigateTo(page) {
-  // Force redirect to home if not logged in and trying to access protected pages
+  // Redirect to home if not logged in and trying to access protected pages
   if (!currentUser && (page === 'app' || page === 'settings')) {
     page = 'home';
   }
@@ -330,10 +330,12 @@ signUpForm?.addEventListener('submit', async event => {
     // with an email that already exists but hasn't been confirmed yet.
     // An empty identities array means the user was created but the email provider identity
     // was not attached, which happens when the email is already taken by another account.
-    const hasNoIdentities = !data.user.identities || data.user.identities.length === 0;
-    if (data?.user && hasNoIdentities) {
-      setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
-      return;
+    if (data?.user) {
+      const hasNoIdentities = !data.user.identities || data.user.identities.length === 0;
+      if (hasNoIdentities) {
+        setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
+        return;
+      }
     }
     signUpForm.reset();
     setSignupStatusMessage('Account created! Check your email to confirm your address before logging in.', 'success');
