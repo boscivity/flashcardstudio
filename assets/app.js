@@ -324,7 +324,8 @@ signUpForm?.addEventListener('submit', async event => {
       }
       return;
     }
-    // Also check if data.user exists but identities is empty (duplicate email case)
+    // Supabase returns a user object with empty identities array when signup is attempted
+    // with an email that already exists but hasn't been confirmed yet
     if (data?.user && (!data.user.identities || data.user.identities.length === 0)) {
       setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
       return;
