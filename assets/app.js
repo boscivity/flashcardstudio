@@ -317,7 +317,7 @@ signUpForm?.addEventListener('submit', async event => {
     if (error) {
       // Check if user already exists
       const errorMsg = error.message ? error.message.toLowerCase() : '';
-      if (errorMsg.includes('already registered') || errorMsg.includes('already exists') || errorMsg.includes('user already registered')) {
+      if (errorMsg.includes('already registered') || errorMsg.includes('already exists')) {
         setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
       } else {
         setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
