@@ -81,7 +81,13 @@ const storageKey = 'flashcardStudioSets';
 const SUPABASE_URL = 'https://tbydrjbqixrrowriuvjx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRieWRyamJxaXhycm93cml1dmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzODczMjUsImV4cCI6MjA3Nzk2MzMyNX0.HOOtdJw6viZ7OozHo3GvK2Q43o0ekMeW30QwUjUcBT0';
 
-const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 let sets = [];
 let editorState = null;
@@ -575,6 +581,11 @@ setsList.addEventListener('click', async event => {
     const set = sets.find(s => s.id === setId);
     if (!set) return;
     if (confirm(`Delete "${set.name}"? This cannot be undone.`)) {
+      // Ensure we have a valid session before attempting to delete
+      const hasValidSession = await ensureValidSession();
+      if (!hasValidSession) {
+        return;
+      }
       try {
         await deleteSetFromDatabase(setId);
         await refreshSetsFromDatabase();
@@ -701,6 +712,12 @@ cancelSetBtn.addEventListener('click', () => {
 saveSetBtn.addEventListener('click', async () => {
   if (!editorState) return;
   if (!requireAccount('save sets')) {
+    return;
+  }
+  
+  // Ensure we have a valid session before attempting to save
+  const hasValidSession = await ensureValidSession();
+  if (!hasValidSession) {
     return;
   }
   
@@ -997,6 +1014,19 @@ async function handleSignOut() {
     navigateTo('home');
     return;
   }
+  
+  // Ensure we have a valid session before attempting sign out
+  const hasValidSession = await ensureValidSession();
+  if (!hasValidSession) {
+    // Session already expired, just clear local state and navigate
+    currentSession = null;
+    currentUser = null;
+    updateTopBar();
+    renderSetsList();
+    navigateTo('home');
+    return;
+  }
+  
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -1146,6 +1176,32 @@ async function handleSessionExpiration({ showAlert = true } = {}) {
   }
   await handleAuthChange(null, 'SIGNED_OUT');
   navigateTo('login');
+}
+
+async function ensureValidSession() {
+  if (!supabase || !currentUser) {
+    return false;
+  }
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error checking session:', error);
+      return false;
+    }
+    if (!session) {
+      await handleSessionExpiration();
+      return false;
+    }
+    // Update current session and user if the access token has changed
+    if (session && (!currentSession || session.access_token !== currentSession.access_token)) {
+      currentSession = session;
+      currentUser = session.user;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error ensuring valid session:', error);
+    return false;
+  }
 }
 
 function updateTopBar() {
