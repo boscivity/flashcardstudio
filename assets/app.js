@@ -903,12 +903,12 @@ async function initializeAccountState() {
   } catch (error) {
     console.error('Could not initialise auth state', error);
   }
-  supabase.auth.onAuthStateChange(async (_event, session) => {
-    await handleAuthChange(session);
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    await handleAuthChange(session, event);
   });
 }
 
-async function handleAuthChange(session) {
+async function handleAuthChange(session, eventType = null) {
   currentSession = session;
   currentUser = session?.user ?? null;
   legacySetsPrompted = false;
@@ -936,8 +936,15 @@ async function handleAuthChange(session) {
     localStorage.setItem('flashcard-studio-theme', userTheme);
   }
 
-  // User logged in and verified, navigate to app
-  navigateTo('app');
+  const isAppVisible = appPage && !appPage.classList.contains('hidden');
+  const isSettingsVisible = settingsPage && !settingsPage.classList.contains('hidden');
+
+  // User logged in and verified, navigate to app unless they are already on
+  // a protected page (app or settings). This avoids redirecting users away
+  // from settings when their session updates (e.g. saving theme preference).
+  if (!isAppVisible && !isSettingsVisible) {
+    navigateTo('app');
+  }
 
   await refreshSetsFromDatabase();
   await adoptLegacySetsIfAvailable();
