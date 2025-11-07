@@ -44,6 +44,7 @@ const topLogInBtn = document.getElementById('topLogInButton');
 const topDashboardBtn = document.getElementById('topDashboardButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
 const topSettingsBtn = document.getElementById('topSettingsButton');
+const topNavGroup = document.getElementById('topNavGroup');
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
 const brandLink = document.getElementById('brandLink');
 
@@ -95,11 +96,20 @@ let starterSetCreated = false;
 
 // Page navigation
 function navigateTo(page) {
+  // Redirect to home if not logged in and trying to access protected pages
+  if (!currentUser && (page === 'app' || page === 'settings')) {
+    page = 'home';
+  }
+  
   homePage?.classList.add('hidden');
   loginPage?.classList.add('hidden');
   signupPage?.classList.add('hidden');
   appPage?.classList.add('hidden');
   settingsPage?.classList.add('hidden');
+  
+  // Update active nav button - always clear first
+  topDashboardBtn?.classList.remove('active');
+  topSettingsBtn?.classList.remove('active');
   
   if (page === 'home') {
     homePage?.classList.remove('hidden');
@@ -112,11 +122,15 @@ function navigateTo(page) {
     signupPage?.classList.remove('hidden');
     window.history.pushState({ page: 'signup' }, '', '#signup');
     setTimeout(() => signUpEmailInput?.focus(), 100);
-  } else if (page === 'app') {
+  } else if (page === 'app' && currentUser) {
+    // Only activate if user is logged in
     appPage?.classList.remove('hidden');
+    topDashboardBtn?.classList.add('active');
     window.history.pushState({ page: 'app' }, '', '#app');
-  } else if (page === 'settings') {
+  } else if (page === 'settings' && currentUser) {
+    // Only activate if user is logged in
     settingsPage?.classList.remove('hidden');
+    topSettingsBtn?.classList.add('active');
     window.history.pushState({ page: 'settings' }, '', '#settings');
   }
 }
@@ -140,21 +154,13 @@ themeToggleBtn?.addEventListener('click', () => {
 });
 
 brandLink?.addEventListener('click', () => {
-  if (currentUser) {
-    navigateTo('app');
-  } else {
-    navigateTo('home');
-  }
+  navigateTo('home');
 });
 
 brandLink?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    if (currentUser) {
-      navigateTo('app');
-    } else {
-      navigateTo('home');
-    }
+    navigateTo('home');
   }
 });
 
@@ -312,12 +318,24 @@ signUpForm?.addEventListener('submit', async event => {
     });
     if (error) {
       // Check if user already exists
-      if (error.message && error.message.toLowerCase().includes('already registered')) {
+      const errorMsg = error.message ? error.message.toLowerCase() : '';
+      if (errorMsg.includes('already registered') || errorMsg.includes('already exists')) {
         setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
       } else {
         setSignupStatusMessage(error.message || 'Could not create your account. Please try again.', 'error');
       }
       return;
+    }
+    // Additional check for duplicate email: Supabase sometimes returns a user object
+    // with an empty identities array when signup is attempted with an email that already
+    // exists. This prevents confusing the user with a "success" message when the account
+    // wasn't actually created. An empty identities array means no auth provider was linked.
+    if (data?.user) {
+      const hasNoIdentities = !data.user.identities || data.user.identities.length === 0;
+      if (hasNoIdentities) {
+        setSignupStatusMessage('An account with this email already exists. Please log in instead.', 'error');
+        return;
+      }
     }
     signUpForm.reset();
     setSignupStatusMessage('Account created! Check your email to confirm your address before logging in.', 'success');
@@ -928,8 +946,7 @@ async function handleAuthChange(session) {
 function updateTopBar() {
   if (currentUser) {
     topLogoutBtn?.classList.remove('hidden');
-    topSettingsBtn?.classList.remove('hidden');
-    topDashboardBtn?.classList.remove('hidden');
+    topNavGroup?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
     if (topAccountStatus) {
@@ -938,8 +955,7 @@ function updateTopBar() {
     }
   } else {
     topLogoutBtn?.classList.add('hidden');
-    topSettingsBtn?.classList.add('hidden');
-    topDashboardBtn?.classList.add('hidden');
+    topNavGroup?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
     if (topAccountStatus) {
