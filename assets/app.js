@@ -1192,8 +1192,8 @@ async function ensureValidSession() {
       await handleSessionExpiration();
       return false;
     }
-    // Update current session and user if they've changed
-    if (session && session !== currentSession) {
+    // Update current session and user if the access token has changed
+    if (session && (!currentSession || session.access_token !== currentSession.access_token)) {
       currentSession = session;
       currentUser = session.user;
     }
