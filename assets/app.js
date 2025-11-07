@@ -44,7 +44,6 @@ const topLogInBtn = document.getElementById('topLogInButton');
 const topDashboardBtn = document.getElementById('topDashboardButton');
 const topLogoutBtn = document.getElementById('topLogoutButton');
 const topSettingsBtn = document.getElementById('topSettingsButton');
-const topNavTabs = document.getElementById('topNavTabs');
 const heroGetStartedBtn = document.getElementById('heroGetStarted');
 const brandLink = document.getElementById('brandLink');
 
@@ -94,32 +93,13 @@ let legacySets = [];
 let legacySetsPrompted = false;
 let starterSetCreated = false;
 
-const PROTECTED_PAGES = ['app', 'settings'];
-
 // Page navigation
 function navigateTo(page) {
-  // Check if trying to access protected pages without authentication
-  if (PROTECTED_PAGES.includes(page) && !currentUser) {
-    page = 'home';
-  }
-  
   homePage?.classList.add('hidden');
   loginPage?.classList.add('hidden');
   signupPage?.classList.add('hidden');
   appPage?.classList.add('hidden');
   settingsPage?.classList.add('hidden');
-  
-  // Update active tab state
-  if (topNavTabs) {
-    const navTabs = topNavTabs.querySelectorAll('.top-bar__nav-tab');
-    navTabs.forEach(tab => {
-      if (tab.dataset.page === page) {
-        tab.classList.add('active');
-      } else {
-        tab.classList.remove('active');
-      }
-    });
-  }
   
   if (page === 'home') {
     homePage?.classList.remove('hidden');
@@ -160,13 +140,21 @@ themeToggleBtn?.addEventListener('click', () => {
 });
 
 brandLink?.addEventListener('click', () => {
-  navigateTo('home');
+  if (currentUser) {
+    navigateTo('app');
+  } else {
+    navigateTo('home');
+  }
 });
 
 brandLink?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    navigateTo('home');
+    if (currentUser) {
+      navigateTo('app');
+    } else {
+      navigateTo('home');
+    }
   }
 });
 
@@ -842,11 +830,9 @@ async function handleSignOut() {
     if (error) {
       throw error;
     }
-    // Auth state change handler will clear user state automatically
     navigateTo('home');
   } catch (error) {
     console.error('Could not sign out', error);
-    alert('Could not sign out. Please try again.');
   }
 }
 
@@ -942,7 +928,8 @@ async function handleAuthChange(session) {
 function updateTopBar() {
   if (currentUser) {
     topLogoutBtn?.classList.remove('hidden');
-    topNavTabs?.classList.remove('hidden');
+    topSettingsBtn?.classList.remove('hidden');
+    topDashboardBtn?.classList.remove('hidden');
     topSignUpBtn?.classList.add('hidden');
     topLogInBtn?.classList.add('hidden');
     if (topAccountStatus) {
@@ -951,7 +938,8 @@ function updateTopBar() {
     }
   } else {
     topLogoutBtn?.classList.add('hidden');
-    topNavTabs?.classList.add('hidden');
+    topSettingsBtn?.classList.add('hidden');
+    topDashboardBtn?.classList.add('hidden');
     topSignUpBtn?.classList.remove('hidden');
     topLogInBtn?.classList.remove('hidden');
     if (topAccountStatus) {

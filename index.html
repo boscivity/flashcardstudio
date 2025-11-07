@@ -4,29 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flashcard Studio</title>
-  <link rel="icon" type="image/png" href="assets/icon.png" />
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
   <div class="top-bar" role="banner">
     <div class="top-bar__inner">
       <div class="top-bar__brand" id="brandLink" role="button" tabindex="0">
-        <img src="assets/icon.png" alt="Flashcard Studio icon" class="top-bar__logo-image" />
+        <img src="assets/brand-icon.svg" alt="Flashcard Studio icon" class="top-bar__logo-image" />
         <span class="top-bar__title">Flashcard Studio</span>
       </div>
       <div class="top-bar__actions">
         <span id="topAccountStatus" class="top-bar__status" data-state="guest">You are browsing as a guest</span>
-        <nav class="top-bar__nav hidden" id="topNavTabs">
-          <button id="topDashboardButton" type="button" class="top-bar__nav-tab" data-page="app">Dashboard</button>
-          <button id="topSettingsButton" type="button" class="top-bar__nav-tab" data-page="settings" aria-label="Settings">
+        <div class="top-bar__buttons">
+          <button id="topDashboardButton" type="button" class="secondary hidden">Dashboard</button>
+          <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
+          <button id="topLogInButton" type="button" class="secondary">Log in</button>
+          <button id="topLogoutButton" type="button" class="secondary hidden">Log out</button>
+          <button id="topSettingsButton" type="button" class="secondary hidden" aria-label="Settings">
             <span class="theme-toggle__icon" aria-hidden="true">⚙️</span>
             <span class="theme-toggle__label">Settings</span>
           </button>
-        </nav>
-        <div class="top-bar__buttons">
-          <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
-          <button id="topLogInButton" type="button" class="secondary">Log in</button>
-          <button id="topLogoutButton" type="button" class="danger hidden">Log out</button>
         </div>
       </div>
     </div>
@@ -283,7 +280,7 @@
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.6</div>
+  <div class="version-badge" aria-label="Version">v1.6.5</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
