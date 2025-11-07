@@ -94,10 +94,12 @@ let legacySets = [];
 let legacySetsPrompted = false;
 let starterSetCreated = false;
 
+const PROTECTED_PAGES = ['app', 'settings'];
+
 // Page navigation
 function navigateTo(page) {
   // Check if trying to access protected pages without authentication
-  if ((page === 'app' || page === 'settings') && !currentUser) {
+  if (PROTECTED_PAGES.includes(page) && !currentUser) {
     page = 'home';
   }
   
@@ -840,13 +842,7 @@ async function handleSignOut() {
     if (error) {
       throw error;
     }
-    // Auth state change will handle clearing user state
-    // Just ensure we navigate to home
-    currentSession = null;
-    currentUser = null;
-    sets = [];
-    updateTopBar();
-    renderSetsList();
+    // Auth state change handler will clear user state automatically
     navigateTo('home');
   } catch (error) {
     console.error('Could not sign out', error);

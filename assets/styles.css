@@ -36,6 +36,7 @@ body {
   --topbar-bg: rgba(15, 23, 42, 0.82);
   --topbar-border: rgba(148, 163, 184, 0.25);
   --topbar-shadow: 0 18px 45px rgba(2, 6, 23, 0.3);
+  --nav-active-color: #3f87ff;
 }
 
 body[data-theme="dark"] {
@@ -71,6 +72,7 @@ body[data-theme="light"] {
   --topbar-bg: rgba(255, 255, 255, 0.9);
   --topbar-border: rgba(88, 99, 126, 0.18);
   --topbar-shadow: 0 18px 35px rgba(46, 54, 80, 0.14);
+  --nav-active-color: #3f87ff;
 }
 
 .top-bar {
@@ -184,7 +186,7 @@ body[data-theme="light"] {
 
 .top-bar__nav-tab.active {
   color: var(--text-primary);
-  border-bottom-color: #3f87ff;
+  border-bottom-color: var(--nav-active-color);
 }
 
 .top-bar__buttons {
