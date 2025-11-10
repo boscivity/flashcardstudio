@@ -98,6 +98,7 @@ let activeTemplates = { front: '', back: '', hint: '' };
 let originalDeck = [];
 let deck = [];
 let currentCard = null;
+let currentCardIndex = -1;
 
 let sessionExpirationHandled = false;
 
@@ -807,16 +808,23 @@ showAnswerBtn.addEventListener('click', () => {
 
 knowBtn.addEventListener('click', () => {
   if (!currentCard) return;
-  deck.shift();
+  if (currentCardIndex >= 0) {
+    deck.splice(currentCardIndex, 1);
+  }
+  currentCardIndex = -1;
   prepareNextCard();
 });
 
 dontKnowBtn.addEventListener('click', () => {
   if (!currentCard) return;
-  const firstCard = deck.shift();
-  if (firstCard) {
-    deck.push(firstCard);
+  if (currentCardIndex >= 0) {
+    const [cardToRetry] = deck.splice(currentCardIndex, 1);
+    const insertIndex = Math.floor(Math.random() * (deck.length + 1));
+    if (cardToRetry) {
+      deck.splice(insertIndex, 0, cardToRetry);
+    }
   }
+  currentCardIndex = -1;
   prepareNextCard();
 });
 
@@ -1580,6 +1588,7 @@ function startStudyWithSet(setId) {
 function resetDeck() {
   deck = originalDeck.map(card => ({ id: card.id, data: { ...card.data } }));
   currentCard = null;
+  currentCardIndex = -1;
   cardHint.textContent = '';
   showAnswerBtn.classList.remove('hidden');
   knowBtn.classList.add('hidden');
@@ -1601,10 +1610,13 @@ function prepareNextCard() {
     restartBtn.classList.remove('hidden');
     returnBtn.classList.remove('hidden');
     currentCard = null;
+    currentCardIndex = -1;
     triggerConfetti();
     return;
   }
-  currentCard = deck[0];
+  const randomIndex = Math.floor(Math.random() * deck.length);
+  currentCardIndex = randomIndex;
+  currentCard = deck[randomIndex];
   cardText.textContent = renderTemplate(activeTemplates.front, currentCard.data);
   const hint = renderTemplate(activeTemplates.hint, currentCard.data).trim();
   cardHint.textContent = hint ? `Hint: ${hint}` : '';
@@ -1641,6 +1653,7 @@ function resetStudyState() {
   deck = [];
   originalDeck = [];
   currentCard = null;
+  currentCardIndex = -1;
   cardText.textContent = '';
   cardHint.textContent = '';
   progressLabel.textContent = 'learned this round: 0/0';
