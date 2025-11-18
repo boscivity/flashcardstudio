@@ -889,6 +889,31 @@ document.addEventListener('keydown', event => {
     }
   }
 });
+
+// Handle page visibility changes (tab switching)
+document.addEventListener('visibilitychange', async () => {
+  if (!document.hidden && supabase && currentUser) {
+    // Page became visible again, refresh the session
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error refreshing session on visibility change:', error);
+        return;
+      }
+      if (!session) {
+        // Session expired while tab was inactive
+        await handleSessionExpiration();
+        return;
+      }
+      // Update current session and user
+      currentSession = session;
+      currentUser = session.user;
+    } catch (error) {
+      console.error('Error handling visibility change:', error);
+    }
+  }
+});
+
 initializeAccountState();
 
 async function refreshSetsFromDatabase({ showLoader = false } = {}) {
