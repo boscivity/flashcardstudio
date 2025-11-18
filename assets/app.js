@@ -57,6 +57,7 @@ const studySection = document.getElementById('study');
 const studySetTitle = document.getElementById('studySetTitle');
 const backButton = document.getElementById('backButton');
 const cardText = document.getElementById('cardText');
+const cardColumns = document.getElementById('cardColumns');
 const cardHint = document.getElementById('cardHint');
 const showAnswerBtn = document.getElementById('showAnswer');
 const knowBtn = document.getElementById('knowButton');
@@ -803,6 +804,8 @@ backButton.addEventListener('click', () => {
 showAnswerBtn.addEventListener('click', () => {
   if (!currentCard) return;
   cardText.textContent = renderTemplate(activeTemplates.back, currentCard.data);
+  const backColumns = extractColumnsFromTemplate(activeTemplates.back);
+  cardColumns.textContent = backColumns.join(' · ');
   isShowingFront = false;
   showAnswerBtn.classList.add('hidden');
   knowBtn.classList.remove('hidden');
@@ -815,6 +818,8 @@ flipBtn?.addEventListener('click', () => {
   isShowingFront = !isShowingFront;
   const templateToShow = isShowingFront ? activeTemplates.front : activeTemplates.back;
   cardText.textContent = renderTemplate(templateToShow, currentCard.data);
+  const columns = extractColumnsFromTemplate(templateToShow);
+  cardColumns.textContent = columns.join(' · ');
 });
 
 knowBtn.addEventListener('click', () => {
@@ -1605,6 +1610,7 @@ function resetDeck() {
   deck = originalDeck.map(card => ({ id: card.id, data: { ...card.data } }));
   currentCard = null;
   currentCardIndex = -1;
+  cardColumns.textContent = '';
   cardHint.textContent = '';
   isShowingFront = true;
   showAnswerBtn.classList.remove('hidden');
@@ -1622,6 +1628,7 @@ function prepareNextCard() {
   isShowingFront = true;
   if (!deck.length) {
     cardText.textContent = 'Great job! You have completed this set for now.';
+    cardColumns.textContent = '';
     cardHint.textContent = '';
     showAnswerBtn.classList.add('hidden');
     knowBtn.classList.add('hidden');
@@ -1638,6 +1645,8 @@ function prepareNextCard() {
   currentCardIndex = randomIndex;
   currentCard = deck[randomIndex];
   cardText.textContent = renderTemplate(activeTemplates.front, currentCard.data);
+  const frontColumns = extractColumnsFromTemplate(activeTemplates.front);
+  cardColumns.textContent = frontColumns.join(' · ');
   const hint = renderTemplate(activeTemplates.hint, currentCard.data).trim();
   cardHint.textContent = hint ? `Hint: ${hint}` : '';
   showAnswerBtn.classList.remove('hidden');
@@ -1677,6 +1686,7 @@ function resetStudyState() {
   currentCardIndex = -1;
   isShowingFront = true;
   cardText.textContent = '';
+  cardColumns.textContent = '';
   cardHint.textContent = '';
   progressLabel.textContent = 'learned this round: 0/0';
   progressFill.style.width = '0%';
@@ -1693,6 +1703,18 @@ function renderTemplate(template, data) {
   return template.replace(/{{\s*([^{}\s]+)\s*}}/g, (match, key) => {
     return data[key] !== undefined ? data[key] : '';
   });
+}
+
+function extractColumnsFromTemplate(template) {
+  const columns = [];
+  const regex = /{{\s*([^{}\s]+)\s*}}/g;
+  let match;
+  while ((match = regex.exec(template)) !== null) {
+    if (!columns.includes(match[1])) {
+      columns.push(match[1]);
+    }
+  }
+  return columns;
 }
 
 function escapeHtml(value) {
