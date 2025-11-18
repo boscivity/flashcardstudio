@@ -61,6 +61,7 @@ const cardHint = document.getElementById('cardHint');
 const showAnswerBtn = document.getElementById('showAnswer');
 const knowBtn = document.getElementById('knowButton');
 const dontKnowBtn = document.getElementById('dontKnowButton');
+const flipBtn = document.getElementById('flipButton');
 const progressLabel = document.getElementById('progressText');
 const progressFill = document.getElementById('progressFill');
 const restartBtn = document.getElementById('restartButton');
@@ -99,6 +100,7 @@ let originalDeck = [];
 let deck = [];
 let currentCard = null;
 let currentCardIndex = -1;
+let isShowingFront = true;
 
 let sessionExpirationHandled = false;
 
@@ -801,9 +803,18 @@ backButton.addEventListener('click', () => {
 showAnswerBtn.addEventListener('click', () => {
   if (!currentCard) return;
   cardText.textContent = renderTemplate(activeTemplates.back, currentCard.data);
+  isShowingFront = false;
   showAnswerBtn.classList.add('hidden');
   knowBtn.classList.remove('hidden');
   dontKnowBtn.classList.remove('hidden');
+  flipBtn?.classList.remove('hidden');
+});
+
+flipBtn?.addEventListener('click', () => {
+  if (!currentCard || flipBtn.classList.contains('hidden')) return;
+  isShowingFront = !isShowingFront;
+  const templateToShow = isShowingFront ? activeTemplates.front : activeTemplates.back;
+  cardText.textContent = renderTemplate(templateToShow, currentCard.data);
 });
 
 knowBtn.addEventListener('click', () => {
@@ -865,6 +876,11 @@ document.addEventListener('keydown', event => {
       dontKnowBtn.click();
     } else if (!returnBtn.classList.contains('hidden')) {
       returnBtn.click();
+    }
+  } else if (event.key === '3') {
+    event.preventDefault();
+    if (!flipBtn?.classList.contains('hidden')) {
+      flipBtn.click();
     }
   }
 });
@@ -1590,9 +1606,11 @@ function resetDeck() {
   currentCard = null;
   currentCardIndex = -1;
   cardHint.textContent = '';
+  isShowingFront = true;
   showAnswerBtn.classList.remove('hidden');
   knowBtn.classList.add('hidden');
   dontKnowBtn.classList.add('hidden');
+  flipBtn?.classList.add('hidden');
   restartBtn.classList.add('hidden');
   returnBtn.classList.add('hidden');
   clearConfetti();
@@ -1601,12 +1619,14 @@ function resetDeck() {
 
 function prepareNextCard() {
   updateProgress();
+  isShowingFront = true;
   if (!deck.length) {
     cardText.textContent = 'Great job! You have completed this set for now.';
     cardHint.textContent = '';
     showAnswerBtn.classList.add('hidden');
     knowBtn.classList.add('hidden');
     dontKnowBtn.classList.add('hidden');
+    flipBtn?.classList.add('hidden');
     restartBtn.classList.remove('hidden');
     returnBtn.classList.remove('hidden');
     currentCard = null;
@@ -1623,6 +1643,7 @@ function prepareNextCard() {
   showAnswerBtn.classList.remove('hidden');
   knowBtn.classList.add('hidden');
   dontKnowBtn.classList.add('hidden');
+  flipBtn?.classList.add('hidden');
   returnBtn.classList.add('hidden');
   clearConfetti();
 }
@@ -1654,6 +1675,7 @@ function resetStudyState() {
   originalDeck = [];
   currentCard = null;
   currentCardIndex = -1;
+  isShowingFront = true;
   cardText.textContent = '';
   cardHint.textContent = '';
   progressLabel.textContent = 'learned this round: 0/0';
@@ -1661,6 +1683,7 @@ function resetStudyState() {
   showAnswerBtn.classList.remove('hidden');
   knowBtn.classList.add('hidden');
   dontKnowBtn.classList.add('hidden');
+  flipBtn?.classList.add('hidden');
   restartBtn.classList.add('hidden');
   returnBtn.classList.add('hidden');
   clearConfetti();
