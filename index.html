@@ -191,7 +191,10 @@
           <h2 id="studySetTitle">Study session</h2>
           <button id="backButton" class="secondary back-button" type="button">Back</button>
         </div>
-        <div class="card" id="cardText"></div>
+        <div class="card">
+          <div class="card__columns" id="cardColumns"></div>
+          <div class="card__content" id="cardText"></div>
+        </div>
         <div class="card__hint" id="cardHint"></div>
         <div class="actions">
           <button id="showAnswer" type="button">1. Show answer</button>
@@ -263,7 +266,7 @@
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.12</div>
+  <div class="version-badge" aria-label="Version">v1.6.13</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
   <script src="assets/app.js" defer></script>
