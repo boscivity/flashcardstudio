@@ -104,6 +104,7 @@ let currentCardIndex = -1;
 let isShowingFront = true;
 
 let sessionExpirationHandled = false;
+let sessionRefreshPromise = null;
 
 let currentSession = null;
 let currentUser = null;
@@ -833,6 +834,7 @@ knowBtn.addEventListener('click', () => {
 
 dontKnowBtn.addEventListener('click', () => {
   if (!currentCard) return;
+  const lastCardId = currentCard.id;
   if (currentCardIndex >= 0) {
     const [cardToRetry] = deck.splice(currentCardIndex, 1);
     const insertIndex = Math.floor(Math.random() * (deck.length + 1));
@@ -841,7 +843,8 @@ dontKnowBtn.addEventListener('click', () => {
     }
   }
   currentCardIndex = -1;
-  prepareNextCard();
+  const avoidCardId = deck.length > 1 ? lastCardId : null;
+  prepareNextCard({ avoidCardId });
 });
 
 restartBtn.addEventListener('click', () => {
@@ -891,27 +894,14 @@ document.addEventListener('keydown', event => {
 });
 
 // Handle page visibility changes (tab switching)
-document.addEventListener('visibilitychange', async () => {
-  if (!document.hidden && supabase && currentUser) {
-    // Page became visible again, refresh the session
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Error refreshing session on visibility change:', error);
-        return;
-      }
-      if (!session) {
-        // Session expired while tab was inactive
-        await handleSessionExpiration();
-        return;
-      }
-      // Update current session and user
-      currentSession = session;
-      currentUser = session.user;
-    } catch (error) {
-      console.error('Error handling visibility change:', error);
-    }
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    void refreshSessionState('visibilitychange');
   }
+});
+
+window.addEventListener('focus', () => {
+  void refreshSessionState('focus');
 });
 
 initializeAccountState();
@@ -1232,6 +1222,43 @@ async function handleSessionExpiration({ showAlert = true } = {}) {
   navigateTo('login');
 }
 
+async function refreshSessionState(reason = 'manual') {
+  if (!supabase) {
+    return;
+  }
+  if (sessionRefreshPromise) {
+    return sessionRefreshPromise;
+  }
+  sessionRefreshPromise = (async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error(`Error refreshing session on ${reason}:`, error);
+        if (isAuthSessionExpiredError(error)) {
+          await handleSessionExpiration();
+        }
+        return;
+      }
+      if (!session) {
+        if (currentUser) {
+          await handleSessionExpiration();
+        }
+        return;
+      }
+      const tokenChanged = !currentSession || session.access_token !== currentSession.access_token;
+      const missingUserState = !currentUser;
+      if (tokenChanged || missingUserState) {
+        await handleAuthChange(session, 'TOKEN_REFRESHED');
+      }
+    } catch (error) {
+      console.error(`Error handling session refresh on ${reason}:`, error);
+    } finally {
+      sessionRefreshPromise = null;
+    }
+  })();
+  return sessionRefreshPromise;
+}
+
 async function ensureValidSession() {
   if (!supabase || !currentUser) {
     return false;
@@ -1240,20 +1267,40 @@ async function ensureValidSession() {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) {
       console.error('Error checking session:', error);
+      if (isAuthSessionExpiredError(error)) {
+        await handleSessionExpiration();
+      } else {
+        await refreshSessionState('session-check-error');
+      }
       return false;
     }
     if (!session) {
       await handleSessionExpiration();
       return false;
     }
-    // Update current session and user if the access token has changed
-    if (session && (!currentSession || session.access_token !== currentSession.access_token)) {
+    const expiresAtMs = session.expires_at ? session.expires_at * 1000 : null;
+    if (expiresAtMs && expiresAtMs - Date.now() < 60000) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.error('Error refreshing session:', refreshError);
+        if (isAuthSessionExpiredError(refreshError)) {
+          await handleSessionExpiration();
+        }
+        return false;
+      }
+      if (refreshed?.session) {
+        await handleAuthChange(refreshed.session, 'TOKEN_REFRESHED');
+        return true;
+      }
+    }
+    if (!currentSession || session.access_token !== currentSession.access_token) {
       currentSession = session;
       currentUser = session.user;
     }
     return true;
   } catch (error) {
     console.error('Error ensuring valid session:', error);
+    await refreshSessionState('session-check-catch');
     return false;
   }
 }
@@ -1648,7 +1695,7 @@ function resetDeck() {
   updateProgress();
 }
 
-function prepareNextCard() {
+function prepareNextCard({ avoidCardId = null } = {}) {
   updateProgress();
   isShowingFront = true;
   if (!deck.length) {
@@ -1666,7 +1713,10 @@ function prepareNextCard() {
     triggerConfetti();
     return;
   }
-  const randomIndex = Math.floor(Math.random() * deck.length);
+  let randomIndex = Math.floor(Math.random() * deck.length);
+  if (deck.length > 1 && avoidCardId && deck[randomIndex]?.id === avoidCardId) {
+    randomIndex = (randomIndex + 1) % deck.length;
+  }
   currentCardIndex = randomIndex;
   currentCard = deck[randomIndex];
   cardText.textContent = renderTemplate(activeTemplates.front, currentCard.data);
