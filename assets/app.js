@@ -501,8 +501,16 @@ logInForm?.addEventListener('submit', async event => {
     }
     logInForm.reset();
     if (data?.session) {
+      // Update session state immediately to prevent race condition
+      currentSession = data.session;
+      currentUser = data.session.user;
+      updateTopBar();
+      
       setLoginStatusMessage('Welcome back! Redirecting...', 'success');
-      setTimeout(() => navigateTo('app'), 1000);
+      
+      // Load sets and navigate
+      await refreshSetsFromDatabase();
+      setTimeout(() => navigateTo('app'), 500);
     }
   } catch (error) {
     console.error(error);
@@ -1821,5 +1829,188 @@ async function ensureValidSession() {
   } catch (error) {
     console.error('Error ensuring valid session:', error);
     return false;
+  }
+}
+
+async function initializeAccountState() {
+  if (!supabase) {
+    console.warn('Supabase client not available');
+    updateTopBar();
+    return;
+  }
+
+  try {
+    // Get initial session
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error getting initial session:', error);
+      currentSession = null;
+      currentUser = null;
+      updateTopBar();
+      return;
+    }
+
+    if (data?.session) {
+      currentSession = data.session;
+      currentUser = data.session.user;
+      
+      // Apply user's theme preference if available
+      const userTheme = currentUser?.user_metadata?.themePreference;
+      if (userTheme === 'light' || userTheme === 'dark') {
+        applyTheme(userTheme);
+        localStorage.setItem('flashcard-studio-theme', userTheme);
+      }
+
+      // Load legacy sets if available
+      loadLegacySetsFromLocalStorage();
+      
+      // Refresh sets from database
+      await refreshSetsFromDatabase();
+      
+      // Adopt legacy sets if user wants to
+      await adoptLegacySetsIfAvailable();
+
+      updateTopBar();
+      
+      // Navigate to app if user is logged in and on home page
+      const hash = window.location.hash;
+      if (!hash || hash === '#home' || hash === '#') {
+        navigateTo('app');
+      }
+    } else {
+      currentSession = null;
+      currentUser = null;
+      updateTopBar();
+    }
+
+    // Listen for auth state changes
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN' && session) {
+        currentSession = session;
+        currentUser = session.user;
+        
+        // Apply user's theme preference
+        const userTheme = currentUser?.user_metadata?.themePreference;
+        if (userTheme === 'light' || userTheme === 'dark') {
+          applyTheme(userTheme);
+          localStorage.setItem('flashcard-studio-theme', userTheme);
+        }
+        
+        updateTopBar();
+        loadLegacySetsFromLocalStorage();
+        void refreshSetsFromDatabase();
+        void adoptLegacySetsIfAvailable();
+      } else if (event === 'SIGNED_OUT') {
+        performLocalSignOut();
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        currentSession = session;
+        currentUser = session.user;
+      } else if (event === 'USER_UPDATED' && session) {
+        currentSession = session;
+        currentUser = session.user;
+      }
+    });
+  } catch (error) {
+    console.error('Error initializing account state:', error);
+    currentSession = null;
+    currentUser = null;
+    updateTopBar();
+  }
+}
+
+async function refreshSessionState(source) {
+  if (!supabase || !currentUser) {
+    return;
+  }
+
+  try {
+    const { data, error } = await promiseWithTimeout(
+      supabase.auth.getSession(),
+      2000,
+      'Session refresh timed out'
+    );
+
+    if (error) {
+      console.error(`Error refreshing session (${source}):`, error);
+      return;
+    }
+
+    const session = data?.session;
+
+    if (!session) {
+      // Session expired while user was away
+      console.log('Session expired, logging out');
+      await handleSessionExpiration();
+    } else if (!currentSession || session.access_token !== currentSession.access_token) {
+      // Session was refreshed
+      console.log('Session refreshed');
+      currentSession = session;
+      currentUser = session.user;
+      updateTopBar();
+    }
+  } catch (error) {
+    console.error(`Error refreshing session (${source}):`, error);
+  }
+}
+
+function isAuthSessionExpiredError(error) {
+  if (!error) {
+    return false;
+  }
+
+  const errorMsg = error.message ? error.message.toLowerCase() : '';
+  const errorCode = error.code ? String(error.code).toLowerCase() : '';
+  
+  // Check for common auth expiration indicators
+  return (
+    errorMsg.includes('jwt expired') ||
+    errorMsg.includes('refresh_token_not_found') ||
+    errorMsg.includes('invalid refresh token') ||
+    errorMsg.includes('not authenticated') ||
+    errorMsg.includes('session expired') ||
+    errorMsg.includes('session not found') ||
+    errorCode === '401' ||
+    errorCode === 'pgrst301' || // PostgREST JWT expired
+    error.status === 401
+  );
+}
+
+async function handleSessionExpiration() {
+  // Prevent multiple simultaneous calls
+  if (sessionExpirationHandled) {
+    return;
+  }
+  sessionExpirationHandled = true;
+
+  try {
+    // Try to refresh the session first
+    if (supabase && currentSession) {
+      try {
+        const { data, error } = await promiseWithTimeout(
+          supabase.auth.refreshSession(),
+          2000,
+          'Session refresh timed out'
+        );
+
+        if (!error && data?.session) {
+          // Successfully refreshed
+          currentSession = data.session;
+          currentUser = data.session.user;
+          sessionExpirationHandled = false;
+          return;
+        }
+      } catch (refreshError) {
+        console.error('Could not refresh session:', refreshError);
+      }
+    }
+
+    // If refresh failed or no session, sign out
+    alert('Your session has expired. Please log in again.');
+    performLocalSignOut();
+  } finally {
+    sessionExpirationHandled = false;
   }
 }
