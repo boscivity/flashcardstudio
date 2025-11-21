@@ -99,6 +99,8 @@ let activeSetId = null;
 let activeTemplates = { front: '', back: '', hint: '' };
 let originalDeck = [];
 let deck = [];
+let focusWindow = [];
+let remainingCards = [];
 let currentCard = null;
 let currentCardIndex = -1;
 let isShowingFront = true;
@@ -858,9 +860,18 @@ flipBtn?.addEventListener('click', () => {
 
 knowBtn.addEventListener('click', () => {
   if (!currentCard) return;
-  if (currentCardIndex >= 0) {
-    deck.splice(currentCardIndex, 1);
+  
+  // Remove the current card from focus window
+  if (currentCardIndex >= 0 && currentCardIndex < focusWindow.length) {
+    focusWindow.splice(currentCardIndex, 1);
+    
+    // Bring in a new card from remaining cards if available
+    if (remainingCards.length > 0) {
+      const nextCard = remainingCards.shift();
+      focusWindow.push(nextCard);
+    }
   }
+  
   currentCardIndex = -1;
   prepareNextCard();
 });
@@ -868,15 +879,18 @@ knowBtn.addEventListener('click', () => {
 dontKnowBtn.addEventListener('click', () => {
   if (!currentCard) return;
   const lastCardId = currentCard.id;
-  if (currentCardIndex >= 0) {
-    const [cardToRetry] = deck.splice(currentCardIndex, 1);
-    const insertIndex = Math.floor(Math.random() * (deck.length + 1));
+  
+  // Remove the card from focus window and reinsert it at a random position
+  if (currentCardIndex >= 0 && currentCardIndex < focusWindow.length) {
+    const [cardToRetry] = focusWindow.splice(currentCardIndex, 1);
+    const insertIndex = Math.floor(Math.random() * (focusWindow.length + 1));
     if (cardToRetry) {
-      deck.splice(insertIndex, 0, cardToRetry);
+      focusWindow.splice(insertIndex, 0, cardToRetry);
     }
   }
+  
   currentCardIndex = -1;
-  const avoidCardId = deck.length > 1 ? lastCardId : null;
+  const avoidCardId = focusWindow.length > 1 ? lastCardId : null;
   prepareNextCard({ avoidCardId });
 });
 
@@ -1458,6 +1472,12 @@ function startStudyWithSet(setId) {
 
 function resetDeck() {
   deck = originalDeck.map(card => ({ id: card.id, data: { ...card.data } }));
+  
+  // Initialize focus window with first 5 cards (or all cards if less than 5)
+  const focusSize = Math.min(5, deck.length);
+  focusWindow = deck.slice(0, focusSize);
+  remainingCards = deck.slice(focusSize);
+  
   currentCard = null;
   currentCardIndex = -1;
   cardColumns.textContent = '';
@@ -1476,7 +1496,9 @@ function resetDeck() {
 function prepareNextCard({ avoidCardId = null } = {}) {
   updateProgress();
   isShowingFront = true;
-  if (!deck.length) {
+  
+  // Check if all cards are learned (both focus window and remaining cards are empty)
+  if (focusWindow.length === 0 && remainingCards.length === 0) {
     cardText.textContent = 'Great job! You have completed this set for now.';
     cardColumns.textContent = '';
     cardHint.textContent = '';
@@ -1491,12 +1513,17 @@ function prepareNextCard({ avoidCardId = null } = {}) {
     triggerConfetti();
     return;
   }
-  let randomIndex = Math.floor(Math.random() * deck.length);
-  if (deck.length > 1 && avoidCardId && deck[randomIndex]?.id === avoidCardId) {
-    randomIndex = (randomIndex + 1) % deck.length;
+  
+  // Select randomly from the focus window
+  let randomIndex = Math.floor(Math.random() * focusWindow.length);
+  
+  // Avoid showing the same card twice in a row if possible
+  if (focusWindow.length > 1 && avoidCardId && focusWindow[randomIndex]?.id === avoidCardId) {
+    randomIndex = (randomIndex + 1) % focusWindow.length;
   }
+  
   currentCardIndex = randomIndex;
-  currentCard = deck[randomIndex];
+  currentCard = focusWindow[randomIndex];
   cardText.textContent = renderTemplate(activeTemplates.front, currentCard.data);
   const frontColumns = extractColumnsFromTemplate(activeTemplates.front);
   cardColumns.textContent = frontColumns.join(' · ');
@@ -1517,7 +1544,9 @@ function updateProgress() {
     progressFill.style.width = '0%';
     return;
   }
-  const learned = total - deck.length;
+  
+  // Cards learned = total - (cards in focus window + cards remaining)
+  const learned = total - (focusWindow.length + remainingCards.length);
   progressLabel.textContent = `learned this round: ${learned}/${total}`;
   const percentage = Math.min(100, Math.max(0, (learned / total) * 100));
   progressFill.style.width = `${percentage}%`;
@@ -1534,6 +1563,8 @@ function resetStudyState() {
   activeSetId = null;
   activeTemplates = { front: '', back: '', hint: '' };
   deck = [];
+  focusWindow = [];
+  remainingCards = [];
   originalDeck = [];
   currentCard = null;
   currentCardIndex = -1;
