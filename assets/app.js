@@ -508,9 +508,14 @@ logInForm?.addEventListener('submit', async event => {
       
       setLoginStatusMessage('Welcome back! Redirecting...', 'success');
       
-      // Load sets and navigate
-      await refreshSetsFromDatabase();
-      setTimeout(() => navigateTo('app'), 500);
+      // Navigate immediately, load sets in background
+      setTimeout(() => {
+        navigateTo('app');
+        // Load sets after navigation for better perceived performance
+        refreshSetsFromDatabase().catch(err => {
+          console.error('Error loading sets after login:', err);
+        });
+      }, 500);
     }
   } catch (error) {
     console.error(error);
@@ -1901,8 +1906,12 @@ async function initializeAccountState() {
         
         updateTopBar();
         loadLegacySetsFromLocalStorage();
-        void refreshSetsFromDatabase();
-        void adoptLegacySetsIfAvailable();
+        refreshSetsFromDatabase().catch(err => {
+          console.error('Error loading sets on auth change:', err);
+        });
+        adoptLegacySetsIfAvailable().catch(err => {
+          console.error('Error adopting legacy sets:', err);
+        });
       } else if (event === 'SIGNED_OUT') {
         performLocalSignOut();
       } else if (event === 'TOKEN_REFRESHED' && session) {
