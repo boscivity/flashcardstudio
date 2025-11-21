@@ -95,6 +95,8 @@ let sets = [];
 let editorState = null;
 let editorMode = 'create';
 
+const FOCUS_WINDOW_SIZE = 5;
+
 let activeSetId = null;
 let activeTemplates = { front: '', back: '', hint: '' };
 let originalDeck = [];
@@ -860,18 +862,14 @@ flipBtn?.addEventListener('click', () => {
 
 knowBtn.addEventListener('click', () => {
   if (!currentCard) return;
-  
+
   // Remove the current card from focus window
   if (currentCardIndex >= 0 && currentCardIndex < focusWindow.length) {
     focusWindow.splice(currentCardIndex, 1);
-    
-    // Bring in a new card from remaining cards if available
-    if (remainingCards.length > 0) {
-      const nextCard = remainingCards.shift();
-      focusWindow.push(nextCard);
-    }
+
+    refillFocusWindow();
   }
-  
+
   currentCardIndex = -1;
   prepareNextCard();
 });
@@ -1472,18 +1470,18 @@ function startStudyWithSet(setId) {
 
 function resetDeck() {
   deck = originalDeck.map(card => ({ id: card.id, data: { ...card.data } }));
-  
+
   // Shuffle the deck using Fisher-Yates algorithm to randomize card order
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
-  
-  // Initialize focus window with first 5 cards (or all cards if less than 5)
-  const focusSize = Math.min(5, deck.length);
-  focusWindow = deck.slice(0, focusSize);
-  remainingCards = deck.slice(focusSize);
-  
+
+  // Initialize focus window from a shuffled deck
+  focusWindow = [];
+  remainingCards = [...deck];
+  refillFocusWindow();
+
   currentCard = null;
   currentCardIndex = -1;
   cardColumns.textContent = '';
@@ -1500,9 +1498,10 @@ function resetDeck() {
 }
 
 function prepareNextCard({ avoidCardId = null } = {}) {
+  refillFocusWindow();
   updateProgress();
   isShowingFront = true;
-  
+
   // Check if all cards are learned (both focus window and remaining cards are empty)
   if (focusWindow.length === 0 && remainingCards.length === 0) {
     cardText.textContent = 'Great job! You have completed this set for now.';
@@ -1541,6 +1540,15 @@ function prepareNextCard({ avoidCardId = null } = {}) {
   flipBtn?.classList.add('hidden');
   returnBtn.classList.add('hidden');
   clearConfetti();
+}
+
+function refillFocusWindow() {
+  while (focusWindow.length < FOCUS_WINDOW_SIZE && remainingCards.length > 0) {
+    const nextCard = remainingCards.shift();
+    if (nextCard) {
+      focusWindow.push(nextCard);
+    }
+  }
 }
 
 function updateProgress() {
