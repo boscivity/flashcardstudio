@@ -228,17 +228,17 @@ function navigateTo(page) {
   if (!currentUser && (page === 'app' || page === 'settings')) {
     page = 'home';
   }
-  
+
   homePage?.classList.add('hidden');
   loginPage?.classList.add('hidden');
   signupPage?.classList.add('hidden');
   appPage?.classList.add('hidden');
   settingsPage?.classList.add('hidden');
-  
+
   // Update active nav button - always clear first
   topDashboardBtn?.classList.remove('active');
   topSettingsBtn?.classList.remove('active');
-  
+
   if (page === 'home') {
     homePage?.classList.remove('hidden');
     window.history.pushState({ page: 'home' }, '', '#home');
@@ -358,51 +358,51 @@ changePasswordForm?.addEventListener('submit', async event => {
     setSettingsStatusMessage('You must be logged in to change your password.', 'error');
     return;
   }
-  
+
   const currentPassword = currentPasswordInput.value;
   const newPassword = newPasswordInput.value;
   const confirmPassword = confirmPasswordInput.value;
-  
+
   if (!currentPassword) {
     setSettingsStatusMessage('Please enter your current password.', 'error');
     return;
   }
-  
+
   if (newPassword.length < 8) {
     setSettingsStatusMessage('New password must be at least 8 characters long.', 'error');
     return;
   }
-  
+
   if (newPassword !== confirmPassword) {
     setSettingsStatusMessage('New passwords do not match.', 'error');
     return;
   }
-  
+
   try {
     setPasswordFormDisabled(true);
     setSettingsStatusMessage('Updating your password…', 'info');
-    
+
     // First verify current password by attempting to sign in
     const { error: verifyError } = await supabase.auth.signInWithPassword({
       email: currentUser.email,
       password: currentPassword
     });
-    
+
     if (verifyError) {
       setSettingsStatusMessage('Current password is incorrect.', 'error');
       return;
     }
-    
+
     // Now update the password
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     });
-    
+
     if (error) {
       setSettingsStatusMessage(error.message || 'Could not update password. Please try again.', 'error');
       return;
     }
-    
+
     changePasswordForm.reset();
     setSettingsStatusMessage('Password updated successfully!', 'success');
   } catch (error) {
@@ -714,23 +714,25 @@ cancelSetBtn.addEventListener('click', () => {
   closeSetEditor();
 });
 
+
+
 saveSetBtn.addEventListener('click', async () => {
   if (!editorState) return;
   if (!requireAccount('save sets')) {
     return;
   }
-  
+
   // Ensure we have a valid session before attempting to save
   const hasValidSession = await ensureValidSession();
   if (!hasValidSession) {
     return;
   }
-  
+
   // Clear previous error states
   setNameInput.classList.remove('field-error');
   templateFront.classList.remove('field-error');
   templateBack.classList.remove('field-error');
-  
+
   let hasErrors = false;
   const trimmedName = (editorState.name || '').trim();
   if (!trimmedName) {
@@ -747,7 +749,7 @@ saveSetBtn.addEventListener('click', async () => {
     templateBack.classList.add('field-error');
     hasErrors = true;
   }
-  
+
   if (hasErrors) {
     alert('Please fill out all required fields (marked with a red asterisk).');
     if (!trimmedName) {
@@ -785,6 +787,9 @@ saveSetBtn.addEventListener('click', async () => {
     }
   };
   try {
+    saveSetBtn.disabled = true;
+    saveSetBtn.textContent = 'Saving...';
+
     await saveSetToDatabase(setToSave);
     await refreshSetsFromDatabase();
     closeSetEditor();
@@ -795,6 +800,9 @@ saveSetBtn.addEventListener('click', async () => {
       return;
     }
     alert('Could not save your set. Please try again.');
+  } finally {
+    saveSetBtn.disabled = false;
+    saveSetBtn.textContent = 'Save set';
   }
 });
 
@@ -903,7 +911,6 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('focus', () => {
   void refreshSessionState('focus');
 });
-
 initializeAccountState();
 
 async function refreshSetsFromDatabase({ showLoader = false } = {}) {
@@ -923,14 +930,14 @@ async function refreshSetsFromDatabase({ showLoader = false } = {}) {
     }
     const fetchedSets = Array.isArray(data)
       ? data.map(record =>
-          cloneSetForEditing({
-            id: record.id,
-            name: record.name,
-            columns: record.columns,
-            cards: record.cards,
-            templates: record.templates
-          })
-        )
+        cloneSetForEditing({
+          id: record.id,
+          name: record.name,
+          columns: record.columns,
+          cards: record.cards,
+          templates: record.templates
+        })
+      )
       : [];
     const hasProvisionedStarterSet = hasStarterSetProvisioned();
     if (!fetchedSets.length && !starterSetCreated && !hasProvisionedStarterSet) {
@@ -1051,56 +1058,50 @@ function renderSetsList() {
 
 async function handleSignOut() {
   if (!supabase) {
-    currentSession = null;
-    currentUser = null;
-    updateTopBar();
-    renderSetsList();
-    navigateTo('home');
+    performLocalSignOut();
     return;
   }
-  
-  // Ensure we have a valid session before attempting sign out
-  const hasValidSession = await ensureValidSession();
-  if (!hasValidSession) {
-    // Session already expired, just clear local state and navigate
-    currentSession = null;
-    currentUser = null;
-    updateTopBar();
-    renderSetsList();
-    navigateTo('home');
-    return;
-  }
-  
+
+  const originalText = topLogoutBtn.textContent;
+  topLogoutBtn.textContent = 'Logging out...';
+  topLogoutBtn.disabled = true;
+
   try {
+    // Attempt to sign out from Supabase
     const { error } = await supabase.auth.signOut();
     if (error) {
-      throw error;
+      console.warn('Supabase signOut error:', error);
+      // We ignore the error and force local logout anyway
     }
-    navigateTo('home');
   } catch (error) {
     console.error('Could not sign out', error);
-    if (isAuthSessionExpiredError(error)) {
-      await handleSessionExpiration({ showAlert: false });
-      return;
-    }
-    alert('Could not sign out. Please try again.');
+  } finally {
+    performLocalSignOut();
+    topLogoutBtn.textContent = originalText;
+    topLogoutBtn.disabled = false;
   }
 }
 
+function performLocalSignOut() {
+  currentSession = null;
+  currentUser = null;
+  updateTopBar();
+  renderSetsList();
+  navigateTo('home');
+}
+
 async function initializeAccountState() {
-  loadLegacySetsFromLocalStorage();
-  
   // Check for auth errors in URL hash
   const hash = window.location.hash.slice(1);
   const hashParams = new URLSearchParams(hash);
-  
+
   if (hashParams.has('error')) {
     const errorDesc = hashParams.get('error_description') || hashParams.get('error');
     const cleanedDesc = errorDesc ? decodeURIComponent(errorDesc.replace(/\+/g, ' ')) : 'Authentication error';
-    
+
     // Clear the hash
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    
+
     // Show error message based on error type
     if (cleanedDesc.includes('expired') || cleanedDesc.includes('invalid')) {
       alert('The verification link has expired or is invalid. Please request a new one or contact support.');
@@ -1119,7 +1120,7 @@ async function initializeAccountState() {
   } else {
     navigateTo('home');
   }
-  
+
   if (!supabase) {
     console.error('Supabase client could not be initialised.');
     return;
@@ -1197,9 +1198,9 @@ function isAuthSessionExpiredError(error) {
   }
   const message = String(
     error.message ||
-      error.error_description ||
-      (typeof error.body === 'object' ? error.body?.message || error.body?.error_description : '') ||
-      ''
+    error.error_description ||
+    (typeof error.body === 'object' ? error.body?.message || error.body?.error_description : '') ||
+    ''
   ).toLowerCase();
   if (!message) {
     return false;
@@ -1267,32 +1268,18 @@ async function ensureValidSession() {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) {
       console.error('Error checking session:', error);
-      if (isAuthSessionExpiredError(error)) {
-        await handleSessionExpiration();
-      } else {
-        await refreshSessionState('session-check-error');
-      }
+      // If there's an error checking the session, we can't trust it.
+      // But we don't want to aggressively log the user out if it's just a network blip.
+      // For critical actions, we'll return false.
       return false;
     }
     if (!session) {
+      // No session means we are definitely logged out
       await handleSessionExpiration();
       return false;
     }
-    const expiresAtMs = session.expires_at ? session.expires_at * 1000 : null;
-    if (expiresAtMs && expiresAtMs - Date.now() < 60000) {
-      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        console.error('Error refreshing session:', refreshError);
-        if (isAuthSessionExpiredError(refreshError)) {
-          await handleSessionExpiration();
-        }
-        return false;
-      }
-      if (refreshed?.session) {
-        await handleAuthChange(refreshed.session, 'TOKEN_REFRESHED');
-        return true;
-      }
-    }
+
+    // Update local state if changed
     if (!currentSession || session.access_token !== currentSession.access_token) {
       currentSession = session;
       currentUser = session.user;
@@ -1300,7 +1287,6 @@ async function ensureValidSession() {
     return true;
   } catch (error) {
     console.error('Error ensuring valid session:', error);
-    await refreshSessionState('session-check-catch');
     return false;
   }
 }
@@ -1500,16 +1486,16 @@ function normaliseIncomingSet(rawSet, { fallbackName = 'Imported set', preserveI
   const cardsSource = Array.isArray(rawSet?.cards) ? rawSet.cards : [];
   const cards = cardsSource.length
     ? cardsSource.map(card => {
-        const data = {};
-        uniqueColumns.forEach(column => {
-          const sourceValue = card?.data?.[column];
-          data[column] = typeof sourceValue === 'string' ? sourceValue : '';
-        });
-        return {
-          id: preserveIds && typeof card?.id === 'string' ? card.id : generateCardId(),
-          data
-        };
-      })
+      const data = {};
+      uniqueColumns.forEach(column => {
+        const sourceValue = card?.data?.[column];
+        data[column] = typeof sourceValue === 'string' ? sourceValue : '';
+      });
+      return {
+        id: preserveIds && typeof card?.id === 'string' ? card.id : generateCardId(),
+        data
+      };
+    })
     : [createEmptyCard(uniqueColumns)];
   return {
     id: preserveIds && typeof rawSet?.id === 'string' ? rawSet.id : generateId(),
