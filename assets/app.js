@@ -1473,7 +1473,7 @@ function startStudyWithSet(setId) {
 function resetDeck() {
   deck = originalDeck.map(card => ({ id: card.id, data: { ...card.data } }));
   
-  // Shuffle the deck to randomize card order
+  // Shuffle the deck using Fisher-Yates algorithm to randomize card order
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
