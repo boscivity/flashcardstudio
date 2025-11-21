@@ -722,9 +722,21 @@ saveSetBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Ensure we have a valid session before attempting to save
-  const hasValidSession = await ensureValidSession();
-  if (!hasValidSession) {
+  // Show feedback immediately
+  saveSetBtn.disabled = true;
+  saveSetBtn.textContent = 'Saving...';
+
+  try {
+    // Ensure we have a valid session before attempting to save
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      saveSetBtn.disabled = false;
+      saveSetBtn.textContent = 'Save set';
+      return;
+    }
+  } catch (err) {
+    saveSetBtn.disabled = false;
+    saveSetBtn.textContent = 'Save set';
     return;
   }
 
@@ -1056,240 +1068,7 @@ function renderSetsList() {
     .join('');
 }
 
-async function handleSignOut() {
-  if (!supabase) {
-    performLocalSignOut();
-    return;
-  }
 
-  const originalText = topLogoutBtn.textContent;
-  topLogoutBtn.textContent = 'Logging out...';
-  topLogoutBtn.disabled = true;
-
-  try {
-    // Attempt to sign out from Supabase
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.warn('Supabase signOut error:', error);
-      // We ignore the error and force local logout anyway
-    }
-  } catch (error) {
-    console.error('Could not sign out', error);
-  } finally {
-    performLocalSignOut();
-    topLogoutBtn.textContent = originalText;
-    topLogoutBtn.disabled = false;
-  }
-}
-
-function performLocalSignOut() {
-  currentSession = null;
-  currentUser = null;
-  updateTopBar();
-  renderSetsList();
-  navigateTo('home');
-}
-
-async function initializeAccountState() {
-  // Check for auth errors in URL hash
-  const hash = window.location.hash.slice(1);
-  const hashParams = new URLSearchParams(hash);
-
-  if (hashParams.has('error')) {
-    const errorDesc = hashParams.get('error_description') || hashParams.get('error');
-    const cleanedDesc = errorDesc ? decodeURIComponent(errorDesc.replace(/\+/g, ' ')) : 'Authentication error';
-
-    // Clear the hash
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
-
-    // Show error message based on error type
-    if (cleanedDesc.includes('expired') || cleanedDesc.includes('invalid')) {
-      alert('The verification link has expired or is invalid. Please request a new one or contact support.');
-    } else {
-      alert(cleanedDesc);
-    }
-    navigateTo('login');
-  } else if (hash === 'login') {
-    navigateTo('login');
-  } else if (hash === 'signup') {
-    navigateTo('signup');
-  } else if (hash === 'app') {
-    navigateTo('app');
-  } else if (hash === 'settings') {
-    navigateTo('settings');
-  } else {
-    navigateTo('home');
-  }
-
-  if (!supabase) {
-    console.error('Supabase client could not be initialised.');
-    return;
-  }
-  try {
-    const {
-      data: { session },
-      error
-    } = await supabase.auth.getSession();
-    if (error) {
-      throw error;
-    }
-    await handleAuthChange(session);
-  } catch (error) {
-    console.error('Could not initialise auth state', error);
-  }
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    await handleAuthChange(session, event);
-  });
-}
-
-async function handleAuthChange(session, eventType = null) {
-  currentSession = session;
-  currentUser = session?.user ?? null;
-  legacySetsPrompted = false;
-  starterSetCreated = false;
-  if (currentUser) {
-    sessionExpirationHandled = false;
-  }
-  updateTopBar();
-
-  if (!currentUser) {
-    sets = [];
-    renderSetsList();
-    return;
-  }
-
-  // Check if email is verified
-  if (!currentUser.email_confirmed_at) {
-    // Email not verified, sign out and show message
-    await supabase.auth.signOut();
-    alert('Please verify your email address before logging in. Check your inbox for the confirmation link.');
-    navigateTo('login');
-    return;
-  }
-
-  const userTheme = currentUser.user_metadata?.themePreference;
-  if (userTheme === 'light' || userTheme === 'dark') {
-    applyTheme(userTheme);
-    localStorage.setItem('flashcard-studio-theme', userTheme);
-  }
-
-  const isAppVisible = appPage && !appPage.classList.contains('hidden');
-  const isSettingsVisible = settingsPage && !settingsPage.classList.contains('hidden');
-  const shouldSkipAutoNavigate = eventType === 'USER_UPDATED';
-
-  // User logged in and verified, navigate to app unless they are already on
-  // a protected page (app or settings) or the session update was triggered by
-  // a profile change such as updating the theme preference.
-  if (!shouldSkipAutoNavigate && !isAppVisible && !isSettingsVisible) {
-    navigateTo('app');
-  }
-
-  await refreshSetsFromDatabase();
-  await adoptLegacySetsIfAvailable();
-}
-
-function isAuthSessionExpiredError(error) {
-  if (!error) {
-    return false;
-  }
-  const status = error.status || error.code;
-  if (status === 401 || status === '401') {
-    return true;
-  }
-  const message = String(
-    error.message ||
-    error.error_description ||
-    (typeof error.body === 'object' ? error.body?.message || error.body?.error_description : '') ||
-    ''
-  ).toLowerCase();
-  if (!message) {
-    return false;
-  }
-  if (message.includes('auth session missing') || message.includes('jwt expired') || message.includes('invalid jwt')) {
-    return true;
-  }
-  return message.includes('session') && message.includes('expired');
-}
-
-async function handleSessionExpiration({ showAlert = true } = {}) {
-  if (sessionExpirationHandled) {
-    return;
-  }
-  sessionExpirationHandled = true;
-  if (showAlert) {
-    alert('Your session has expired. Please log in again.');
-  }
-  await handleAuthChange(null, 'SIGNED_OUT');
-  navigateTo('login');
-}
-
-async function refreshSessionState(reason = 'manual') {
-  if (!supabase) {
-    return;
-  }
-  if (sessionRefreshPromise) {
-    return sessionRefreshPromise;
-  }
-  sessionRefreshPromise = (async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error(`Error refreshing session on ${reason}:`, error);
-        if (isAuthSessionExpiredError(error)) {
-          await handleSessionExpiration();
-        }
-        return;
-      }
-      if (!session) {
-        if (currentUser) {
-          await handleSessionExpiration();
-        }
-        return;
-      }
-      const tokenChanged = !currentSession || session.access_token !== currentSession.access_token;
-      const missingUserState = !currentUser;
-      if (tokenChanged || missingUserState) {
-        await handleAuthChange(session, 'TOKEN_REFRESHED');
-      }
-    } catch (error) {
-      console.error(`Error handling session refresh on ${reason}:`, error);
-    } finally {
-      sessionRefreshPromise = null;
-    }
-  })();
-  return sessionRefreshPromise;
-}
-
-async function ensureValidSession() {
-  if (!supabase || !currentUser) {
-    return false;
-  }
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error('Error checking session:', error);
-      // If there's an error checking the session, we can't trust it.
-      // But we don't want to aggressively log the user out if it's just a network blip.
-      // For critical actions, we'll return false.
-      return false;
-    }
-    if (!session) {
-      // No session means we are definitely logged out
-      await handleSessionExpiration();
-      return false;
-    }
-
-    // Update local state if changed
-    if (!currentSession || session.access_token !== currentSession.access_token) {
-      currentSession = session;
-      currentUser = session.user;
-    }
-    return true;
-  } catch (error) {
-    console.error('Error ensuring valid session:', error);
-    return false;
-  }
-}
 
 function updateTopBar() {
   if (currentUser) {
@@ -1948,4 +1727,99 @@ function applyTheme(theme) {
   `;
   themeToggleBtn.setAttribute('aria-label', `Switch to ${nextTheme} theme`);
   themeToggleBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+}
+
+async function handleSignOut() {
+  if (!supabase) {
+    performLocalSignOut();
+    return;
+  }
+
+  const originalText = topLogoutBtn.textContent;
+  topLogoutBtn.textContent = 'Logging out...';
+  topLogoutBtn.disabled = true;
+
+  try {
+    // Attempt to sign out from Supabase with a timeout
+    // If the socket is disconnected, this might hang, so we force a timeout
+    const { error } = await promiseWithTimeout(
+      supabase.auth.signOut(),
+      2000,
+      'Sign out timed out'
+    );
+
+    if (error) {
+      console.warn('Supabase signOut error:', error);
+    }
+  } catch (error) {
+    console.error('Could not sign out', error);
+  } finally {
+    // Always force local logout to ensure user isn't stuck
+    performLocalSignOut();
+    topLogoutBtn.textContent = originalText;
+    topLogoutBtn.disabled = false;
+  }
+}
+
+function performLocalSignOut() {
+  currentSession = null;
+  currentUser = null;
+  updateTopBar();
+  renderSetsList();
+  navigateTo('home');
+}
+
+function promiseWithTimeout(promise, ms, timeoutErrorMsg) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(timeoutErrorMsg));
+    }, ms);
+
+    promise.then(
+      (res) => {
+        clearTimeout(timeoutId);
+        resolve(res);
+      },
+      (err) => {
+        clearTimeout(timeoutId);
+        reject(err);
+      }
+    );
+  });
+}
+
+async function ensureValidSession() {
+  if (!supabase || !currentUser) {
+    return false;
+  }
+  try {
+    // Add a timeout to the session check so it doesn't hang indefinitely
+    const { data, error } = await promiseWithTimeout(
+      supabase.auth.getSession(),
+      2000,
+      'Session check timed out'
+    );
+
+    const session = data?.session;
+
+    if (error) {
+      console.error('Error checking session:', error);
+      return false;
+    }
+    if (!session) {
+      // No session means we are definitely logged out
+      await handleSessionExpiration();
+      return false;
+    }
+
+    // Update local state if changed
+    if (!currentSession || session.access_token !== currentSession.access_token) {
+      currentSession = session;
+      currentUser = session.user;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error ensuring valid session:', error);
+    return false;
+  }
 }
