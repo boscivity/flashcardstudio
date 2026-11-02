@@ -1,0 +1,15 @@
+{
+  "name": "Flashcard Studio",
+  "short_name": "Flashcards",
+  "description": "Flashcards with spaced repetition, typed recall, practice tests and a match game.",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f0d17",
+  "theme_color": "#6a46f5",
+  "icons": [
+    { "src": "assets/img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

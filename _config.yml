@@ -1,0 +1,8 @@
+# GitHub Pages serves the files as they are; keep dev-only files out of the published site.
+exclude:
+  - AGENTS.md
+  - package.json
+  - package-lock.json
+  - node_modules
+  - scripts
+  - tests

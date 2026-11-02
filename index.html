@@ -1,274 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flashcard Studio</title>
-  <link rel="icon" type="image/png" href="assets/icon.png" />
-  <link rel="stylesheet" href="assets/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://tbydrjbqixrrowriuvjx.supabase.co wss://tbydrjbqixrrowriuvjx.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Flashcard Studio — remember what you study</title>
+  <meta name="description" content="Free flashcards with spaced repetition. Type your answers, take practice tests and play match. Works offline and syncs across devices.">
+  <meta name="theme-color" content="#f7f6fb">
+  <meta name="color-scheme" content="light dark">
+  <link rel="canonical" href="https://www.flashcardstudio.work/">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Flashcard Studio — remember what you study">
+  <meta property="og:description" content="Free flashcards with spaced repetition, typed recall, practice tests and a match game.">
+  <meta property="og:url" content="https://www.flashcardstudio.work/">
+  <meta property="og:image" content="https://www.flashcardstudio.work/assets/img/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="assets/css/app.css?v=2.0.0">
+  <script src="assets/js/theme.js?v=2.0.0"></script>
+  <script src="assets/vendor/supabase.js?v=2.0.0" defer></script>
+  <script type="module" src="assets/js/main.js?v=2.0.0"></script>
 </head>
 <body>
-  <div class="top-bar" role="banner">
-    <div class="top-bar__inner">
-      <div class="top-bar__brand" id="brandLink" role="button" tabindex="0">
-        <img src="assets/icon.png" alt="Flashcard Studio icon" class="top-bar__logo-image" />
-        <span class="top-bar__title">Flashcard Studio</span>
-      </div>
-      <div class="top-bar__actions">
-        <span id="topAccountStatus" class="top-bar__status" data-state="guest">You are browsing as a guest</span>
-        <button
-          id="topMenuToggle"
-          type="button"
-          class="top-bar__menu-toggle"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="top-bar__menu-icon" aria-hidden="true"></span>
-        </button>
-        <div class="top-bar__buttons" id="topMenuPanel">
-          <div class="top-bar__nav-group hidden" id="topNavGroup">
-            <button id="topDashboardButton" type="button" class="secondary nav-button">Dashboard</button>
-            <button id="topSettingsButton" type="button" class="secondary nav-button" aria-label="Settings">
-              Settings
-            </button>
-          </div>
-          <button id="topSignUpButton" type="button" class="secondary">Sign up</button>
-          <button id="topLogInButton" type="button" class="secondary">Log in</button>
-          <button id="topLogoutButton" type="button" class="logout-button hidden">Log out</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Home Page -->
-  <div id="homePage" class="page">
-    <main>
-      <header class="hero">
-        <h1>Flashcard Studio</h1>
-        <p class="subtitle">
-          Create, import, and study flashcard sets from any device. Sign in once and everything you create stays synced with your account.
-        </p>
-        <div class="hero-actions">
-          <button type="button" id="heroGetStarted">Get Started</button>
-        </div>
-      </header>
-
-      
-    </main>
-  </div>
-
-  <!-- Login Page -->
-  <div id="loginPage" class="page hidden">
-    <main class="auth-main">
-      <div class="auth-container">
-        <h1>Log in to Flashcard Studio</h1>
-        <p class="subtitle">Access your flashcard sets from any device</p>
-        
-        <div id="loginStatus" class="account-status hidden" role="status"></div>
-        
-        <form id="logInForm" class="auth-form">
-          <label>
-            Email
-            <input id="logInEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
-          </label>
-          <label>
-            Password
-            <input id="logInPassword" type="password" autocomplete="current-password" placeholder="Your password" required />
-          </label>
-          <button type="submit">Log in</button>
-        </form>
-        
-        <div class="auth-footer">
-          <p>Don't have an account? <button id="switchToSignUp" type="button" class="link-button">Sign up</button></p>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Sign Up Page -->
-  <div id="signupPage" class="page hidden">
-    <main class="auth-main">
-      <div class="auth-container">
-        <h1>Create your account</h1>
-        <p class="subtitle">Start building your flashcard collection today</p>
-        
-        <div id="signupStatus" class="account-status hidden" role="status"></div>
-        
-        <form id="signUpForm" class="auth-form">
-          <label>
-            Email
-            <input id="signUpEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
-          </label>
-          <label>
-            Password
-            <input id="signUpPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
-          </label>
-          <button type="submit">Create account</button>
-        </form>
-        
-        <div class="auth-footer">
-          <p>Already have an account? <button id="switchToLogIn" type="button" class="link-button">Log in</button></p>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- App Page (Sets Manager) -->
-  <div id="appPage" class="page hidden">
-    <main>
-      <section id="setManager">
-        <div class="section-header">
-          <h2>Your Flashcard Sets</h2>
-          <p>Create new sets, import from CSV, or study your existing decks.</p>
-        </div>
-        <div class="set-controls">
-          <button id="createSetButton">Create a set</button>
-          <button id="importSetButton" class="secondary">Import from CSV</button>
-          <button id="downloadExample" class="secondary download-example">Download example CSV</button>
-          <input id="importSetInput" type="file" class="hidden" accept=".csv,text/csv" />
-        </div>
-        <div id="setsList" class="sets-list"></div>
-      </section>
-
-      <section id="setEditor" class="hidden" aria-live="polite">
-        <div class="section-header">
-          <h2 id="setEditorTitle">Create a set</h2>
-          <p>Use the creator to define the fields you want and craft the flashcards for this set. Your work is saved to your account.</p>
-        </div>
-        <div class="flex-row">
-          <label class="required-field">
-            <span class="field-label">Set name</span>
-            <input id="setNameInput" type="text" placeholder="e.g. Biology Chapter 5" />
-          </label>
-        </div>
-        <div class="column-editor">
-          <h3>Fields</h3>
-          <p class="subtitle" style="font-size: 0.95rem; text-align: left;">These are the columns you can reference in your templates.</p>
-          <div id="columnList"></div>
-          <div class="flex-row">
-            <input id="newColumnInput" type="text" placeholder="Add a new field" />
-            <button id="addColumnButton" type="button" class="secondary">Add field</button>
-          </div>
-        </div>
-        <div class="templates-editor">
-          <h3>Templates</h3>
-          <p class="subtitle" style="font-size: 0.95rem; text-align: left;">Use <code>{{FieldName}}</code> to pull values from your cards. Front and back are required.</p>
-          <div class="flex-row">
-            <label class="required-field">
-              <span class="field-label">Front template</span>
-              <textarea id="templateFront" placeholder="e.g. {{Term}}"></textarea>
-            </label>
-            <label class="required-field">
-              <span class="field-label">Back template</span>
-              <textarea id="templateBack" placeholder="e.g. {{Definition}}"></textarea>
-            </label>
-          </div>
-          <label>
-            Optional hint template
-            <textarea id="templateHint" placeholder="e.g. {{Hint}}"></textarea>
-          </label>
-        </div>
-        <div class="cards-editor">
-          <div class="study-header" style="margin-bottom: 1rem;">
-            <h3 style="margin: 0;">Cards</h3>
-            <button id="addCardButton" type="button" class="secondary">Add card</button>
-          </div>
-          <div class="cards-editor__table-wrapper">
-            <table>
-              <thead id="cardsTableHead"></thead>
-              <tbody id="cardsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="actions">
-          <button id="saveSetButton" type="button">Save set</button>
-          <button id="cancelSetButton" type="button" class="secondary">Cancel</button>
-        </div>
-      </section>
-
-      <section id="study" class="hidden" aria-live="polite">
-        <div class="study-header">
-          <h2 id="studySetTitle">Study session</h2>
-          <button id="backButton" class="secondary back-button" type="button">Back</button>
-        </div>
-        <div class="card">
-          <div class="card__columns" id="cardColumns"></div>
-          <div class="card__content" id="cardText"></div>
-        </div>
-        <div class="card__hint" id="cardHint"></div>
-        <div class="actions">
-          <button id="showAnswer" type="button">1. Show answer</button>
-          <button id="knowButton" type="button" class="hidden">1. I know it</button>
-          <button id="dontKnowButton" type="button" class="hidden">2. I don't know it</button>
-          <button id="flipButton" type="button" class="hidden">3. Flip</button>
-        </div>
-        <div class="progress-meter">
-          <div class="progress-meter__label" id="progressText">learned this round: 0/0</div>
-          <div class="progress-meter__track">
-            <div class="progress-meter__fill" id="progressFill"></div>
-          </div>
-        </div>
-        <div class="actions">
-          <button id="restartButton" type="button" class="hidden secondary">1. Study again</button>
-          <button id="returnButton" type="button" class="hidden secondary back-button">2. Back</button>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Settings Page -->
-  <div id="settingsPage" class="page hidden">
-    <main>
-      <section id="settingsSection">
-        <div class="section-header">
-          <h2>Settings</h2>
-          <p>Manage your account preferences and appearance</p>
-        </div>
-        
-        <div id="settingsStatus" class="account-status hidden" role="status"></div>
-        
-        <div class="settings-section">
-          <h3>Appearance</h3>
-          <div class="settings-row">
-            <div class="settings-info">
-              <strong>Theme</strong>
-              <p>Choose your preferred color scheme</p>
-            </div>
-            <div class="settings-control">
-              <button id="themeToggle" type="button" class="secondary">
-                <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
-                <span class="theme-toggle__label">Dark mode</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="settings-section">
-          <h3>Account Security</h3>
-          <form id="changePasswordForm" class="settings-form">
-            <label class="required-field">
-              <span class="field-label">Current Password</span>
-              <input id="currentPassword" type="password" autocomplete="current-password" placeholder="Your current password" required />
-            </label>
-            <label class="required-field">
-              <span class="field-label">New Password</span>
-              <input id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required />
-            </label>
-            <label class="required-field">
-              <span class="field-label">Confirm New Password</span>
-              <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter new password" minlength="8" required />
-            </label>
-            <button type="submit">Change Password</button>
-          </form>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.19</div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
-  <script src="assets/app.js" defer></script>
+  <a class="skip-link" href="#view">Skip to content</a>
+  <header class="topbar" id="topbar"></header>
+  <main id="view" tabindex="-1">
+    <div class="page"><div class="skeleton skeleton--hero"></div></div>
+  </main>
+  <footer class="site-footer">
+    <span>Flashcard Studio</span>
+    <a href="#/settings">Settings &amp; backup</a>
+    <a href="https://github.com/boscivity/flashcardstudio" rel="noopener">Source</a>
+    <span class="version">v2.0.0</span>
+  </footer>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <noscript><p class="page">Flashcard Studio needs JavaScript to run. Please enable it in your browser settings.</p></noscript>
 </body>
 </html>
