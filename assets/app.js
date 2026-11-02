@@ -1,3 +1,4 @@
+(() => {
 // Page elements
 const homePage = document.getElementById('homePage');
 const loginPage = document.getElementById('loginPage');
@@ -590,7 +591,12 @@ setsList.addEventListener('click', async event => {
   const action = button.dataset.action;
   const setId = button.dataset.id;
   if (!setId) return;
-  if (action === 'study') {
+  if (action === 'recall') {
+    const set = sets.find(item => item.id === setId);
+    if (set) window.openRecall(set.name, set.cards.map(card => ({
+      id: card.id, cue: renderTemplate(set.templates.front, card.data), answer: renderTemplate(set.templates.back, card.data)
+    })), currentUser.id + '/' + set.id);
+  } else if (action === 'study') {
     startStudyWithSet(setId);
   } else if (action === 'edit') {
     const set = sets.find(s => s.id === setId);
@@ -780,6 +786,7 @@ saveSetBtn.addEventListener('click', async () => {
   }
 
   if (hasErrors) {
+    saveSetBtn.disabled = false; saveSetBtn.textContent = 'Save set';
     alert('Please fill out all required fields (marked with a red asterisk).');
     if (!trimmedName) {
       setNameInput.focus();
@@ -801,6 +808,7 @@ saveSetBtn.addEventListener('click', async () => {
     return editorState.columns.some(column => card.data[column].length > 0);
   });
   if (!nonEmptyCards.length) {
+    saveSetBtn.disabled = false; saveSetBtn.textContent = 'Save set';
     alert('Add at least one card with some content.');
     return;
   }
@@ -1076,16 +1084,17 @@ function renderSetsList() {
         <div class="set-card__header">
           <div class="set-card__title-row">
             <h3>${escapeHtml(set.name)}</h3>
-            <button type="button" data-action="delete" data-id="${set.id}" class="set-card__delete" aria-label="Delete set">
+            <button type="button" data-action="delete" data-id="${escapeHtml(set.id)}" class="set-card__delete" aria-label="Delete set">
               <span aria-hidden="true">🗑️</span>
             </button>
           </div>
           <div class="set-card__meta">${cardCount} ${cardLabel} · ${escapeHtml(set.columns.join(', '))}</div>
         </div>
         <div class="set-card__actions">
-          <button data-action="study" data-id="${set.id}">Study</button>
-          <button data-action="edit" data-id="${set.id}" class="secondary">Edit</button>
-          <button data-action="export" data-id="${set.id}" class="secondary">Export CSV</button>
+          <button data-action="recall" data-id="${escapeHtml(set.id)}">Recall practice</button>
+          <button class="secondary" data-action="study" data-id="${escapeHtml(set.id)}">Flip cards</button>
+          <button data-action="edit" data-id="${escapeHtml(set.id)}" class="secondary">Edit</button>
+          <button data-action="export" data-id="${escapeHtml(set.id)}" class="secondary">Export CSV</button>
         </div>
       </div>
     `;
@@ -1420,12 +1429,12 @@ function renderCardsTable() {
     const inputs = editorState.columns.map(column => {
       const encodedColumn = encodeForDataset(column);
       const value = card.data[column] ?? '';
-      return `<td><input data-card-id="${card.id}" data-column="${encodedColumn}" value="${escapeHtml(value)}" /></td>`;
+      return `<td><input data-card-id="${escapeHtml(card.id)}" data-column="${encodedColumn}" value="${escapeHtml(value)}" /></td>`;
     }).join('');
     return `
-      <tr data-card-id="${card.id}">
+      <tr data-card-id="${escapeHtml(card.id)}">
         ${inputs}
-        <td><button type="button" class="secondary danger" data-remove-card="${card.id}">Remove</button></td>
+        <td><button type="button" class="secondary danger" data-remove-card="${escapeHtml(card.id)}">Remove</button></td>
       </tr>
     `;
   }).join('');
@@ -2068,3 +2077,5 @@ async function handleSessionExpiration() {
     sessionExpirationHandled = false;
   }
 }
+
+})();

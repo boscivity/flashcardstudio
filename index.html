@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://tbydrjbqixrrowriuvjx.supabase.co wss://tbydrjbqixrrowriuvjx.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; upgrade-insecure-requests">
   <title>Flashcard Studio</title>
   <link rel="icon" type="image/png" href="assets/icon.png" />
   <link rel="stylesheet" href="assets/styles.css" />
@@ -44,14 +46,12 @@
   <div id="homePage" class="page">
     <main>
       <header class="hero">
-        <h1>Flashcard Studio</h1>
-        <p class="subtitle">
-          Create, import, and study flashcard sets from any device. Sign in once and everything you create stays synced with your account.
-        </p>
-        <div class="hero-actions">
-          <button type="button" id="heroGetStarted">Get Started</button>
-        </div>
-      </header>
+        <p class="eyebrow">FLASHCARD STUDIO / RECALL</p>
+        <h1>What can you remember?</h1>
+        <p class="subtitle">Read a definition. Recall the term. Come back when it’s time to review.</p>
+        <div class="hero-actions"><button id="quickPractice">Practice chemistry</button><button class="secondary" id="chooseTerms">Use my terms</button></div>
+        <button class="link-button" id="heroGetStarted">Open my account decks</button>
+        <form id="termForm" hidden><label for="termLines">Your terms</label><p>One term and definition per line, separated by a tab or |.</p><textarea id="termLines" rows="6" maxlength="100000" placeholder="Osmosis | Movement of water across a selectively permeable membrane"></textarea><p id="termError" role="status"></p><button>Practice these terms</button></form></header>
 
       
     </main>
@@ -266,9 +266,18 @@
   </div>
 
   <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  <div class="version-badge" aria-label="Version">v1.6.19</div>
+  <div class="version-badge" aria-label="Version">v1.7.0</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous" defer></script>
+  <dialog id="recall" aria-labelledby="recallTitle">
+    <div class="recall-top"><span class="eyebrow">RECALL SESSION</span><button id="closeRecall" class="secondary">Close</button></div>
+    <h2 id="recallTitle"></h2><p id="recallStatus" aria-live="polite"></p><progress id="recallProgress" max="1" value="0"></progress>
+    <section id="recallCard"><p class="eyebrow" id="recallCue">PROMPT</p><h3 id="recallPrompt"></h3>
+    <form id="recallForm"><label for="recallInput">Your answer</label><input id="recallInput" autocomplete="off" maxlength="2000"><button>Check answer</button></form>
+    <div id="recallFeedback" hidden><p id="recallVerdict" role="status"></p><strong id="recallAnswer"></strong><div class="recall-actions"><button id="recallAgain" class="secondary">Practice again</button><button id="recallGood">I recalled it</button></div></div></section>
+    <div id="recallDone" hidden><p id="nextReview"></p><button id="practiceAll">Practice all now</button></div>
+  </dialog>
+  <script src="assets/recall.js" defer></script>
+  <script src="assets/vendor/supabase.js" defer></script>
   <script src="assets/app.js" defer></script>
 </body>
 </html>

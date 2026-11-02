@@ -1311,3 +1311,25 @@ textarea.field-error {
     padding: 2rem 1.5rem;
   }
 }
+
+[hidden] { display:none !important }
+#homePage .hero { max-width: 780px; margin: clamp(1rem,6vw,5rem) auto; padding: clamp(1.4rem,5vw,4rem); border:1px solid var(--card-border); border-radius:24px; background:var(--surface-bg); text-align:left }
+#homePage .hero h1 { font-size:clamp(2.3rem,6vw,4.7rem); line-height:1.04; letter-spacing:-.055em; margin:1rem 0 }
+#homePage .hero .subtitle { max-width:44ch; text-align:left; margin-left:0 }
+.eyebrow { font-size:.75rem; font-weight:750; letter-spacing:.16em; color:var(--text-muted) }
+#homePage .hero-actions { justify-content:flex-start; flex-wrap:wrap }
+#termForm { margin-top:1.5rem }
+#termForm textarea { width:100% }
+#recall { width:min(94vw,600px); max-height:90dvh; overflow:auto; border:1px solid var(--input-border); background:var(--card-bg); background-color:var(--text-primary); background:var(--page-gradient); color:var(--text-primary); padding:clamp(1.2rem,4vw,2.6rem); border-radius:20px; box-shadow:var(--surface-shadow) }
+#recall::backdrop { background:rgba(4,10,22,.80) }
+.recall-top,.recall-actions { display:flex; align-items:center; justify-content:space-between; gap:.65rem; flex-wrap:wrap }
+#recall h2 { font-size:1.65rem; margin:1rem 0 .25rem }
+#recall h3 { font-size:clamp(1.35rem,4vw,2rem); line-height:1.35; margin:.6rem 0 1.4rem }
+#recall progress { width:100%; height:.55rem; accent-color:#51b8ac }
+#recallCard { margin-top:1.4rem; padding:0; background:transparent; box-shadow:none; overflow-wrap:anywhere }
+#recallForm { display:grid; gap:.5rem }
+#recallAnswer { display:block; font-size:1.4rem; margin:.6rem 0 1.2rem }
+#recallStatus,#nextReview { color:var(--text-muted) }
+:focus-visible { outline:3px solid #62b6ff; outline-offset:3px }
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
