@@ -1,5 +1,5 @@
 // Release version. Bump with: node scripts/bump-version.mjs <new-version>
-export const VERSION = '2.0.0';
+export const VERSION = '2.0.1';
 
 export const SITE_URL = 'https://www.flashcardstudio.work/';
 

@@ -1,10 +1,10 @@
 // Run: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { previewAll, schedule, State, Rating, retrievability, intervalDays, DAY } from '../assets/js/fsrs.js?v=2.0.0';
-import { gradeAnswer, normalize, variants, diffChars, hintMask, editDistance } from '../assets/js/answer.js?v=2.0.0';
-import { parseCsv, toCsv, parseTable, parsePairs } from '../assets/js/csv.js?v=2.0.0';
-import { planSession, chooseMode, pickDistractors, renderTemplate, isDue, cardStatus, deckStats } from '../assets/js/session.js?v=2.0.0';
+import { previewAll, schedule, State, Rating, retrievability, intervalDays, DAY } from '../assets/js/fsrs.js?v=2.0.1';
+import { gradeAnswer, normalize, variants, diffChars, hintMask, editDistance } from '../assets/js/answer.js?v=2.0.1';
+import { parseCsv, toCsv, parseTable, parsePairs } from '../assets/js/csv.js?v=2.0.1';
+import { planSession, chooseMode, pickDistractors, renderTemplate, isDue, cardStatus, deckStats, autoAnswerSide } from '../assets/js/session.js?v=2.0.1';
 
 const MIN = 60000;
 const T0 = Date.UTC(2026, 0, 10, 15);
@@ -144,6 +144,18 @@ test('large decks plan quickly', () => {
   const plan = planSession(cards.map(c => ({ deck, card: c })), { now: T0, newLimit: 10 });
   assert.ok(performance.now() - start < 500);
   assert.equal(plan.length, 10010);
+});
+
+test('auto answer side asks for the answer on Q&A decks', () => {
+  const longDef = 'a much longer definition that would be painful to type out word for word';
+  const vocab = mkDeck([1, 2, 3].map(i => ({ id: i, data: { Term: `t${i}`, Definition: longDef } })));
+  assert.equal(autoAnswerSide(vocab), 'front');
+  assert.equal(autoAnswerSide(mkDeck([card(1), card(2)])), 'back');
+  const qa = { ...vocab, columns: ['Question', 'Answer'], templates: { front: '{{Question}}', back: '{{Answer}}', hint: '' },
+    cards: [{ id: 1, data: { Question: 'Convert °C to K', Answer: 'K = °C + 273.15, so add 273.15 to the Celsius temperature' } }] };
+  assert.equal(autoAnswerSide(qa), 'back');
+  const asked = mkDeck([1, 2, 3].map(i => ({ id: i, data: { Term: `Why does ${i} happen?`, Definition: longDef } })));
+  assert.equal(autoAnswerSide(asked), 'back');
 });
 
 test('question modes and distractors', () => {

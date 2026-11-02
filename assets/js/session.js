@@ -1,5 +1,5 @@
 // Deck helpers and study-session planning. Pure functions, no DOM.
-import { State, isValidSrs, DAY } from './fsrs.js?v=2.0.0';
+import { State, isValidSrs, DAY } from './fsrs.js?v=2.0.1';
 
 const FIELD = /{{\s*([^{}]+?)\s*}}/g;
 export const LEARN_AHEAD = 20 * 60000;
@@ -57,6 +57,23 @@ export function deckStats(deck, now = Date.now()) {
     else if (isValidSrs(card.srs) && (stats.nextDue === null || card.srs.due < stats.nextDue)) stats.nextDue = card.srs.due;
   }
   return stats;
+}
+
+/**
+ * The side "Auto" asks for. Vocabulary decks with long definitions ask for the term (shown the
+ * definition); question-and-answer decks always ask for the answer.
+ */
+export function autoAnswerSide(deck) {
+  const label = side => templateFields(deck.templates[side])[0] || '';
+  if (/question|prompt|problem/i.test(label('front')) || /answer|solution/i.test(label('back'))) return 'back';
+  const sample = deck.cards.slice(0, 200);
+  const fronts = sample.map(c => renderTemplate(deck.templates.front, c.data)).filter(Boolean);
+  if (fronts.filter(f => /\?|_{3,}/.test(f)).length * 3 > fronts.length) return 'back';
+  const avg = side => {
+    const lens = sample.map(c => renderTemplate(deck.templates[side], c.data).length).filter(Boolean);
+    return lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
+  };
+  return avg('back') > 40 && avg('front') < avg('back') ? 'front' : 'back';
 }
 
 export function cardHasContent(deck, card) {
