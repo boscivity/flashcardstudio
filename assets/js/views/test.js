@@ -1,9 +1,9 @@
 // Practice test: written, multiple choice and true/false questions, graded at the end.
-import { html, render, icon, plural, shuffle, confirmDialog, confetti } from '../ui.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
-import { cardSides, cardHasContent, sideLabel, isLong, pickDistractors } from '../session.js?v=2.0.0';
-import { gradeAnswer } from '../answer.js?v=2.0.0';
-import { go, setHandoff, setGuard } from '../nav.js?v=2.0.0';
+import { html, render, icon, plural, shuffle, confirmDialog, confetti } from '../ui.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
+import { cardSides, cardHasContent, sideLabel, isLong, pickDistractors, autoAnswerSide } from '../session.js?v=2.0.1';
+import { gradeAnswer } from '../answer.js?v=2.0.1';
+import { go, setHandoff, setGuard } from '../nav.js?v=2.0.1';
 
 export function testView({ root, params }) {
   const deckId = decodeURIComponent(params[0]);
@@ -15,8 +15,7 @@ export function testView({ root, params }) {
   }
   const cards = deck.cards.filter(c => cardHasContent(deck, c));
   const front = sideLabel(deck, 'front'), back = sideLabel(deck, 'back');
-  const avgBack = cards.reduce((n, c) => n + cardSides(deck, c).back.length, 0) / Math.max(1, cards.length);
-  const config = { count: Math.min(20, cards.length), types: { written: true, mc: cards.length >= 2, tf: cards.length >= 2 }, answerWith: avgBack > 40 ? 'front' : 'back' };
+  const config = { count: Math.min(20, cards.length), types: { written: true, mc: cards.length >= 2, tf: cards.length >= 2 }, answerWith: autoAnswerSide(deck) };
   let questions = [];
   let phase = 'setup';
   let inProgress = false;

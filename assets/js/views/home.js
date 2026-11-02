@@ -1,10 +1,10 @@
 // Landing page for new visitors and the dashboard for everyone with decks.
-import { html, render, icon, plural, greeting, fmtDue, toast, pickFile, readText, dialog } from '../ui.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
-import { deckStats, dayIndex } from '../session.js?v=2.0.0';
-import { SAMPLES, sampleDeck } from '../samples.js?v=2.0.0';
-import { parseTable, parsePairs } from '../csv.js?v=2.0.0';
-import { go, setHandoff } from '../nav.js?v=2.0.0';
+import { html, render, icon, plural, greeting, fmtDue, toast, pickFile, readText, dialog } from '../ui.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
+import { deckStats, dayIndex } from '../session.js?v=2.0.1';
+import { SAMPLES, sampleDeck } from '../samples.js?v=2.0.1';
+import { parseTable, parsePairs } from '../csv.js?v=2.0.1';
+import { go, setHandoff } from '../nav.js?v=2.0.1';
 
 export function homeView({ root }) {
   let query = '';

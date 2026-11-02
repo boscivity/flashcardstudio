@@ -1,7 +1,7 @@
 // Match game: pair terms with definitions against the clock.
-import { html, render, icon, shuffle, fmtDuration, confetti } from '../ui.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
-import { cardSides, cardHasContent } from '../session.js?v=2.0.0';
+import { html, render, icon, shuffle, fmtDuration, confetti } from '../ui.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
+import { cardSides, cardHasContent } from '../session.js?v=2.0.1';
 
 const PAIRS = 6;
 const PENALTY = 1000;

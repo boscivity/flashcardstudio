@@ -1,10 +1,10 @@
 // Settings: appearance, study preferences, account and data.
-import { html, render, icon, plural, toast, downloadFile, canSpeak } from '../ui.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
-import * as auth from '../auth.js?v=2.0.0';
-import { VERSION } from '../config.js?v=2.0.0';
-import { importFile } from './home.js?v=2.0.0';
-import { applyTheme } from '../theme-switch.js?v=2.0.0';
+import { html, render, icon, plural, toast, downloadFile, canSpeak } from '../ui.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
+import * as auth from '../auth.js?v=2.0.1';
+import { VERSION } from '../config.js?v=2.0.1';
+import { importFile } from './home.js?v=2.0.1';
+import { applyTheme } from '../theme-switch.js?v=2.0.1';
 
 export function settingsView({ root }) {
   const draw = () => {

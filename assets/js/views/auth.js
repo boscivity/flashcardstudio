@@ -1,7 +1,7 @@
 // Log in, sign up, forgot password and set-new-password screens.
-import { html, render, icon, toast } from '../ui.js?v=2.0.0';
-import * as auth from '../auth.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
+import { html, render, icon, toast } from '../ui.js?v=2.0.1';
+import * as auth from '../auth.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
 
 const SCREENS = {
   login: {

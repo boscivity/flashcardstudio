@@ -1,9 +1,9 @@
 // Deck overview: stats, study modes, options and the card list.
-import { html, render, icon, plural, fmtDue, toast, confirmDialog, downloadFile } from '../ui.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
-import { deckStats, cardSides, cardStatus, STATUS_LABEL, sideLabel, cardHasContent } from '../session.js?v=2.0.0';
-import { toCsv } from '../csv.js?v=2.0.0';
-import { go } from '../nav.js?v=2.0.0';
+import { html, render, icon, plural, fmtDue, toast, confirmDialog, downloadFile } from '../ui.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
+import { deckStats, cardSides, cardStatus, STATUS_LABEL, sideLabel, cardHasContent } from '../session.js?v=2.0.1';
+import { toCsv } from '../csv.js?v=2.0.1';
+import { go } from '../nav.js?v=2.0.1';
 
 export function deckView({ root, params }) {
   const deckId = decodeURIComponent(params[0]);
@@ -95,7 +95,7 @@ export function deckView({ root, params }) {
             ${[['smart', 'Smart'], ['typing', 'Typing'], ['mc', 'Multiple choice'], ['flip', 'Flip & grade']].map(([v, l]) => html`
               <label><input type="radio" name="types" value="${v}" ${prefs.types === v ? 'checked' : ''}><span>${l}</span></label>`)}
           </fieldset>
-          <p class="muted small">Smart starts new cards as multiple choice, then asks you to type the answer. Auto answers with whichever side is shorter to type.
+          <p class="muted small">Smart starts new cards as multiple choice, then asks you to type the answer. Auto asks for the answer; only vocabulary decks with long definitions ask for the term instead.
           ${starred ? html`<br><a href="#/study/${encodeURIComponent(deck.id)}?starred">Study only your ${plural(starred, 'starred card')}</a>` : ''}</p>
         </div>
       </details>

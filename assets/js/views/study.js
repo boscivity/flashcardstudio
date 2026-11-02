@@ -1,10 +1,10 @@
 // Smart study session: multiple choice -> typed recall -> spaced reviews, scheduled with FSRS.
-import { html, render, icon, plural, fmtInterval, fmtDue, fmtDuration, toast, speak, canSpeak, confetti, isTypingTarget } from '../ui.js?v=2.0.0';
-import * as store from '../store.js?v=2.0.0';
-import { previewAll, schedule, Rating } from '../fsrs.js?v=2.0.0';
-import { planSession, chooseMode, pickDistractors, cardSides, renderTemplate, templateFields, LEARN_AHEAD, deckStats, shuffle } from '../session.js?v=2.0.0';
-import { gradeAnswer, diffChars, hintMask } from '../answer.js?v=2.0.0';
-import { go, takeHandoff, setHandoff } from '../nav.js?v=2.0.0';
+import { html, render, icon, plural, fmtInterval, fmtDue, fmtDuration, toast, speak, canSpeak, confetti, isTypingTarget } from '../ui.js?v=2.0.1';
+import * as store from '../store.js?v=2.0.1';
+import { previewAll, schedule, Rating } from '../fsrs.js?v=2.0.1';
+import { planSession, chooseMode, pickDistractors, cardSides, renderTemplate, templateFields, autoAnswerSide, LEARN_AHEAD, deckStats, shuffle } from '../session.js?v=2.0.1';
+import { gradeAnswer, diffChars, hintMask } from '../answer.js?v=2.0.1';
+import { go, takeHandoff, setHandoff } from '../nav.js?v=2.0.1';
 
 const RATING_LABELS = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
 
@@ -37,11 +37,7 @@ export function studyView({ root, params, query }) {
   const answerSide = deck => {
     const pref = store.deckPrefs(deck.id).answerWith;
     if (pref === 'back' || pref === 'front' || pref === 'both') return pref;
-    const avg = side => {
-      const lens = deck.cards.slice(0, 200).map(c => renderTemplate(deck.templates[side], c.data).length).filter(Boolean);
-      return lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
-    };
-    return avg('back') > 40 && avg('front') < avg('back') ? 'front' : 'back';
+    return autoAnswerSide(deck);
   };
   const sideFor = new Map(decks.map(d => [d.id, answerSide(d)]));
 
