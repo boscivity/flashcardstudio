@@ -1,0 +1,38 @@
+# Free Supabase projects pause after about a week without traffic, which breaks sign-in and sync.
+# This pings the database every two days and fails loudly if the project is unreachable.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: '23 9 */2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: assets/js/config.js
+          sparse-checkout-cone-mode: false
+      - name: Query the database through the public API
+        run: |
+          url=$(sed -n "s/^export const SUPABASE_URL = '\(.*\)';$/\1/p" assets/js/config.js)
+          key=$(sed -n "s/^export const SUPABASE_KEY = '\(.*\)';$/\1/p" assets/js/config.js)
+          table=$(sed -n "s/^export const DECKS_TABLE = '\(.*\)';$/\1/p" assets/js/config.js)
+          status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 --retry 2 \
+            "$url/rest/v1/$table?select=id&limit=1" -H "apikey: $key" -H "Authorization: Bearer $key" || true)
+          echo "Supabase answered HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::Supabase did not answer (HTTP $status). Restore the project in the Supabase dashboard, or sign-in and sync stay down."
+            exit 1
+          fi
+      - name: Keep this scheduled workflow from being disabled for inactivity
+        if: always()
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/keepalive.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
