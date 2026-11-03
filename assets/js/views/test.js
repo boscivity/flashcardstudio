@@ -1,9 +1,9 @@
 // Practice test: written, multiple choice and true/false questions, graded at the end.
-import { html, render, icon, plural, shuffle, confirmDialog, confetti } from '../ui.js?v=2.0.1';
-import * as store from '../store.js?v=2.0.1';
-import { cardSides, cardHasContent, sideLabel, isLong, pickDistractors, autoAnswerSide } from '../session.js?v=2.0.1';
-import { gradeAnswer } from '../answer.js?v=2.0.1';
-import { go, setHandoff, setGuard } from '../nav.js?v=2.0.1';
+import { html, render, icon, plural, shuffle, confirmDialog, confetti } from '../ui.js?v=2.0.2';
+import * as store from '../store.js?v=2.0.2';
+import { cardSides, cardHasContent, sideLabel, isLong, pickDistractors, mcChoices, autoAnswerSide } from '../session.js?v=2.0.2';
+import { gradeAnswer } from '../answer.js?v=2.0.2';
+import { go, setHandoff, setGuard } from '../nav.js?v=2.0.2';
 
 export function testView({ root, params }) {
   const deckId = decodeURIComponent(params[0]);
@@ -34,7 +34,8 @@ export function testView({ root, params }) {
       if (type === 'written' && isLong(answer) && types.length > 1) type = types.includes('mc') ? 'mc' : 'tf';
       const q = { card, type, prompt: sides[promptSide], answer, answerLabel: side === 'back' ? back : front, response: null };
       if (type === 'mc') {
-        q.options = shuffle([answer, ...pickDistractors(answer, pool)]);
+        const mc = mcChoices(q.prompt, answer, pool);
+        Object.assign(q, { prompt: mc.prompt, answer: mc.correct, options: mc.options });
         if (q.options.length < 2) q.type = 'written';
       }
       if (type === 'tf') {

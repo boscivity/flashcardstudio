@@ -218,7 +218,7 @@ for (const width of [390, 1280]) {
     await page.goto(BASE);
     await page.waitForSelector('.hero__title');
     assert.equal(await noOverflow(page), true);
-    assert.equal(await page.textContent('.version'), 'v2.0.1');
+    assert.equal(await page.textContent('.version'), 'v2.0.2');
   });
 
   await step(`${tag} editor validation, tab-to-add, smart paste, literal HTML`, async () => {

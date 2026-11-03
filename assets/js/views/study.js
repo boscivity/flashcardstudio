@@ -1,10 +1,10 @@
 // Smart study session: multiple choice -> typed recall -> spaced reviews, scheduled with FSRS.
-import { html, render, icon, plural, fmtInterval, fmtDue, fmtDuration, toast, speak, canSpeak, confetti, isTypingTarget } from '../ui.js?v=2.0.1';
-import * as store from '../store.js?v=2.0.1';
-import { previewAll, schedule, Rating } from '../fsrs.js?v=2.0.1';
-import { planSession, chooseMode, pickDistractors, cardSides, renderTemplate, templateFields, autoAnswerSide, LEARN_AHEAD, deckStats, shuffle } from '../session.js?v=2.0.1';
-import { gradeAnswer, diffChars, hintMask } from '../answer.js?v=2.0.1';
-import { go, takeHandoff, setHandoff } from '../nav.js?v=2.0.1';
+import { html, render, icon, plural, fmtInterval, fmtDue, fmtDuration, toast, speak, canSpeak, confetti, isTypingTarget } from '../ui.js?v=2.0.2';
+import * as store from '../store.js?v=2.0.2';
+import { previewAll, schedule, Rating } from '../fsrs.js?v=2.0.2';
+import { planSession, chooseMode, mcChoices, cardSides, renderTemplate, templateFields, autoAnswerSide, LEARN_AHEAD, deckStats } from '../session.js?v=2.0.2';
+import { gradeAnswer, diffChars, hintMask } from '../answer.js?v=2.0.2';
+import { go, takeHandoff, setHandoff } from '../nav.js?v=2.0.2';
 
 const RATING_LABELS = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
 
@@ -71,15 +71,15 @@ export function studyView({ root, params, query }) {
     const used = new Set([...templateFields(deck.templates.front), ...templateFields(deck.templates.back), ...templateFields(deck.templates.hint)]);
     const extra = deck.columns.filter(c => !used.has(c) && String(card.data[c] || '').trim()).map(c => [c, card.data[c]]);
     const pool = deck.cards.filter(c => c.id !== card.id).map(c => renderTemplate(deck.templates[answerKey], c.data)).filter(Boolean);
-    const distractors = pickDistractors(sides[answerKey], pool);
-    const mode = chooseMode({ card, answer: sides[answerKey], types: store.deckPrefs(deck.id).types, optionCount: distractors.length, seenThisSession: item.seen });
+    const mc = mcChoices(sides[promptKey], sides[answerKey], pool);
+    const mode = chooseMode({ card, answer: sides[answerKey], types: store.deckPrefs(deck.id).types, optionCount: mc.options.length - 1, seenThisSession: item.seen });
     return {
       item, deck, card, mode,
-      prompt: sides[promptKey], answer: sides[answerKey],
+      prompt: mode === 'mc' ? mc.prompt : sides[promptKey], answer: sides[answerKey], correct: mc.correct,
       promptLabel: templateFields(deck.templates[promptKey])[0] || (promptKey === 'front' ? 'Front' : 'Back'),
       answerLabel: templateFields(deck.templates[answerKey])[0] || (answerKey === 'front' ? 'Front' : 'Back'),
       hint: sides.hint, extra,
-      options: mode === 'mc' ? shuffle([sides[answerKey], ...distractors]) : []
+      options: mode === 'mc' ? mc.options : []
     };
   }
 
@@ -183,7 +183,7 @@ export function studyView({ root, params, query }) {
     if (current.mode === 'mc') {
       return html`
         <div class="options options--done">
-          ${current.options.map((opt, i) => html`<div class="option ${opt === current.answer ? 'is-correct' : i === attempt.choice ? 'is-wrong' : 'is-dim'}"><kbd>${i + 1}</kbd><span>${opt}</span>${opt === current.answer ? icon('check') : i === attempt.choice ? icon('x') : ''}</div>`)}
+          ${current.options.map((opt, i) => html`<div class="option ${opt === current.correct ? 'is-correct' : i === attempt.choice ? 'is-wrong' : 'is-dim'}"><kbd>${i + 1}</kbd><span>${opt}</span>${opt === current.correct ? icon('check') : i === attempt.choice ? icon('x') : ''}</div>`)}
         </div>
         <p class="verdict verdict--${v}" role="status">${verdictText}</p>
         ${current.extra.length ? html`<dl class="qcard__extra">${current.extra.map(([k, val]) => html`<div><dt>${k}</dt><dd>${val}</dd></div>`)}</dl>` : ''}
@@ -306,7 +306,7 @@ export function studyView({ root, params, query }) {
   function choose(index) {
     if (phase !== 'ask' || current.mode !== 'mc' || !current.options[index]) return;
     attempt.choice = index;
-    const right = current.options[index] === current.answer;
+    const right = current.options[index] === current.correct;
     attempt.verdict = right ? 'correct' : 'wrong';
     attempt.suggested = right ? Rating.Good : Rating.Again;
     phase = 'feedback';
