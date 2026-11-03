@@ -1,5 +1,5 @@
 // Supabase auth wrapper with friendly error messages.
-import { SUPABASE_URL, SUPABASE_KEY, SITE_URL } from './config.js?v=2.0.1';
+import { SUPABASE_URL, SUPABASE_KEY, SITE_URL } from './config.js?v=2.0.2';
 
 export const client = window.supabase?.createClient
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {

@@ -1,19 +1,19 @@
 // App shell: routing, top bar, auth state and service worker.
-import { html, render, icon, plural, toast, dialog } from './ui.js?v=2.0.1';
-import * as store from './store.js?v=2.0.1';
-import * as auth from './auth.js?v=2.0.1';
-import { VERSION } from './config.js?v=2.0.1';
-import { applyTheme } from './theme-switch.js?v=2.0.1';
-import { getGuard, go } from './nav.js?v=2.0.1';
-import { homeView } from './views/home.js?v=2.0.1';
-import { deckView } from './views/deck.js?v=2.0.1';
-import { editorView } from './views/editor.js?v=2.0.1';
-import { studyView } from './views/study.js?v=2.0.1';
-import { flashcardsView } from './views/flashcards.js?v=2.0.1';
-import { testView } from './views/test.js?v=2.0.1';
-import { matchView } from './views/match.js?v=2.0.1';
-import { settingsView } from './views/settings.js?v=2.0.1';
-import { authView } from './views/auth.js?v=2.0.1';
+import { html, render, icon, plural, toast, dialog } from './ui.js?v=2.0.2';
+import * as store from './store.js?v=2.0.2';
+import * as auth from './auth.js?v=2.0.2';
+import { VERSION } from './config.js?v=2.0.2';
+import { applyTheme } from './theme-switch.js?v=2.0.2';
+import { getGuard, go } from './nav.js?v=2.0.2';
+import { homeView } from './views/home.js?v=2.0.2';
+import { deckView } from './views/deck.js?v=2.0.2';
+import { editorView } from './views/editor.js?v=2.0.2';
+import { studyView } from './views/study.js?v=2.0.2';
+import { flashcardsView } from './views/flashcards.js?v=2.0.2';
+import { testView } from './views/test.js?v=2.0.2';
+import { matchView } from './views/match.js?v=2.0.2';
+import { settingsView } from './views/settings.js?v=2.0.2';
+import { authView } from './views/auth.js?v=2.0.2';
 
 const view = document.getElementById('view');
 const topbar = document.getElementById('topbar');

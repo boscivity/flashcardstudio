@@ -1,8 +1,8 @@
 // Classic flip-through flashcards with "know it / still learning" sorting.
-import { html, render, icon, plural, speak, canSpeak, shuffle, isTypingTarget, confetti } from '../ui.js?v=2.0.1';
-import * as store from '../store.js?v=2.0.1';
-import { cardSides, cardHasContent, sideLabel } from '../session.js?v=2.0.1';
-import { go, setHandoff } from '../nav.js?v=2.0.1';
+import { html, render, icon, plural, speak, canSpeak, shuffle, isTypingTarget, confetti } from '../ui.js?v=2.0.2';
+import * as store from '../store.js?v=2.0.2';
+import { cardSides, cardHasContent, sideLabel } from '../session.js?v=2.0.2';
+import { go, setHandoff } from '../nav.js?v=2.0.2';
 
 export function flashcardsView({ root, params, query }) {
   const deckId = decodeURIComponent(params[0]);

@@ -1,9 +1,9 @@
 // Create / edit a deck: quick term-definition rows, bulk paste, and optional custom fields.
-import { html, render, icon, plural, toast, confirmDialog } from '../ui.js?v=2.0.1';
-import * as store from '../store.js?v=2.0.1';
-import { parsePairs, detectSeparator } from '../csv.js?v=2.0.1';
-import { renderTemplate } from '../session.js?v=2.0.1';
-import { go, setGuard, takeHandoff } from '../nav.js?v=2.0.1';
+import { html, render, icon, plural, toast, confirmDialog } from '../ui.js?v=2.0.2';
+import * as store from '../store.js?v=2.0.2';
+import { parsePairs, detectSeparator } from '../csv.js?v=2.0.2';
+import { renderTemplate } from '../session.js?v=2.0.2';
+import { go, setGuard, takeHandoff } from '../nav.js?v=2.0.2';
 
 const blankCard = columns => ({ id: store.uuid(), data: Object.fromEntries(columns.map(c => [c, ''])) });
 

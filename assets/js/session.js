@@ -1,5 +1,5 @@
 // Deck helpers and study-session planning. Pure functions, no DOM.
-import { State, isValidSrs, DAY } from './fsrs.js?v=2.0.1';
+import { State, isValidSrs, DAY } from './fsrs.js?v=2.0.2';
 
 const FIELD = /{{\s*([^{}]+?)\s*}}/g;
 export const LEARN_AHEAD = 20 * 60000;
@@ -145,7 +145,18 @@ export function chooseMode({ card, answer, types = 'smart', optionCount = 0, see
   return 'type';
 }
 
-/** Picks up to 3 distractors from `pool` (answer strings), preferring similar lengths. */
+// Rough kind of answer (number with its unit, chemical-style formula, short phrase, sentence), so
+// distractors look like plausible answers instead of giving the right one away.
+function answerShape(text) {
+  const t = String(text).normalize('NFKC').trim();
+  const num = t.match(/^[~≈<>±+\-−]?\s*\d[\d.,]*(?:\s*[x×]\s*10\S*)?\s*(.*)$/);
+  if (num && num[1].split(/\s+/).length <= 3) return { kind: 'number', unit: num[1].toLowerCase().split(/\s+/)[0] || '' };
+  const formula = !/\s/.test(t) && /^[A-Z([]/.test(t) && (/\d|[+\-−]$/.test(t) || /^[A-Z][a-z]?$/.test(t) || (t.match(/[A-Z]/g) || []).length > 1);
+  if (formula) return { kind: 'formula' };
+  return { kind: t.split(/\s+/).length <= 3 ? 'short' : 'long' };
+}
+
+/** Picks up to 3 distractors from `pool` (answer strings), preferring the same kind of answer and a similar length. */
 export function pickDistractors(answer, pool, rng = Math.random, count = 3) {
   const key = s => String(s).trim().toLowerCase();
   const seen = new Set([key(answer)]);
@@ -157,6 +168,50 @@ export function pickDistractors(answer, pool, rng = Math.random, count = 3) {
     unique.push(p);
   }
   const len = String(answer).length;
-  const ranked = shuffle(unique, rng).sort((a, b) => Math.abs(a.length - len) - Math.abs(b.length - len));
-  return shuffle(ranked.slice(0, Math.max(count * 3, 8)), rng).slice(0, count);
+  const want = answerShape(answer);
+  const tier = s => {
+    const got = answerShape(s);
+    return got.kind !== want.kind ? 2 : got.kind === 'number' && got.unit !== want.unit ? 1 : 0;
+  };
+  // Fill from the most alike answers first; within a tier, pick randomly among the closest lengths.
+  const out = [];
+  for (const t of [0, 1, 2]) {
+    const ranked = shuffle(unique.filter(s => tier(s) === t), rng).sort((a, b) => Math.abs(a.length - len) - Math.abs(b.length - len));
+    out.push(...shuffle(ranked.slice(0, Math.max(count * 3, 8)), rng).slice(0, count - out.length));
+    if (out.length >= count) break;
+  }
+  return out;
+}
+
+const CHOICE_LINE = /^\s*(?:[•▪◦*]|\(?[a-eA-E][).])\s+(.+)$/;
+// Ignores spacing, punctuation, "and", dash style and state symbols like (aq), so "O and S" matches "O, S".
+const loose = s => String(s).normalize('NFKC').toLowerCase().replace(/[−–—]/g, '-').replace(/\((?:s|l|g|aq)\)/g, '').replace(/\band\b|[\s,;.·]/g, '');
+
+/**
+ * Splits a question that lists its own answer choices ("…?\n• NaX\n• Na₂X") into the question and
+ * the choices, and finds which choice is `answer`. Returns null unless exactly one choice matches.
+ */
+export function listedChoices(prompt, answer) {
+  const stem = [], choices = [];
+  for (const line of String(prompt || '').split('\n')) {
+    const m = line.match(CHOICE_LINE);
+    if (m) choices.push(m[1].trim()); else stem.push(line);
+  }
+  if (choices.length < 2) return null;
+  const want = loose(answer);
+  const keys = choices.map(loose);
+  let hits = keys.flatMap((k, i) => (k === want ? [i] : []));
+  if (!hits.length) hits = keys.flatMap((k, i) => (k.length >= 3 && (want.includes(k) || k.includes(want)) ? [i] : []));
+  if (hits.length !== 1) return null;
+  return { stem: stem.join('\n').trim(), choices, correct: choices[hits[0]] };
+}
+
+/**
+ * Multiple-choice options for a card: the question's own listed choices when it has them, otherwise
+ * the answer plus distractors from `pool`. `prompt` drops the listed choices, since they become buttons.
+ */
+export function mcChoices(prompt, answer, pool, rng = Math.random) {
+  const listed = listedChoices(prompt, answer);
+  if (listed) return { prompt: listed.stem, correct: listed.correct, options: shuffle(listed.choices, rng) };
+  return { prompt, correct: answer, options: shuffle([answer, ...pickDistractors(answer, pool, rng)], rng) };
 }

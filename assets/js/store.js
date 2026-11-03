@@ -3,9 +3,9 @@
 // so the app opens instantly and keeps working offline. Study progress lives on each
 // card (`srs`) and is merged per card by review time, so devices never overwrite
 // newer progress or newer edits.
-import { DECKS_TABLE } from './config.js?v=2.0.1';
-import { isValidSrs } from './fsrs.js?v=2.0.1';
-import { dayIndex } from './session.js?v=2.0.1';
+import { DECKS_TABLE } from './config.js?v=2.0.2';
+import { isValidSrs } from './fsrs.js?v=2.0.2';
+import { dayIndex } from './session.js?v=2.0.2';
 
 const KEYS = {
   guest: 'fcs:v2:guest',

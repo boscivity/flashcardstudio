@@ -1,10 +1,10 @@
 // Run: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { previewAll, schedule, State, Rating, retrievability, intervalDays, DAY } from '../assets/js/fsrs.js?v=2.0.1';
-import { gradeAnswer, normalize, variants, diffChars, hintMask, editDistance } from '../assets/js/answer.js?v=2.0.1';
-import { parseCsv, toCsv, parseTable, parsePairs } from '../assets/js/csv.js?v=2.0.1';
-import { planSession, chooseMode, pickDistractors, renderTemplate, isDue, cardStatus, deckStats, autoAnswerSide } from '../assets/js/session.js?v=2.0.1';
+import { previewAll, schedule, State, Rating, retrievability, intervalDays, DAY } from '../assets/js/fsrs.js?v=2.0.2';
+import { gradeAnswer, normalize, variants, diffChars, hintMask, editDistance } from '../assets/js/answer.js?v=2.0.2';
+import { parseCsv, toCsv, parseTable, parsePairs } from '../assets/js/csv.js?v=2.0.2';
+import { planSession, chooseMode, pickDistractors, renderTemplate, isDue, cardStatus, deckStats, autoAnswerSide, listedChoices, mcChoices } from '../assets/js/session.js?v=2.0.2';
 
 const MIN = 60000;
 const T0 = Date.UTC(2026, 0, 10, 15);
@@ -168,6 +168,38 @@ test('question modes and distractors', () => {
   assert.equal(d.length, 3);
   assert.ok(!d.some(x => x.toLowerCase() === 'paris'));
   assert.equal(new Set(d).size, 3);
+});
+
+test('distractors look like the answer', () => {
+  const pool = ['bent', '1 g', 'AlI₃', 'CaCl₂', 'Mg₃N₂', 'linear', 'trigonal planar', '45.6 g', 'Fe₂O₃', '3.2 g', '0.5 g', '7 mL'];
+  for (let i = 0; i < 20; i++) {
+    const formulas = pickDistractors('Na₃X', pool);
+    assert.ok(formulas.every(d => ['AlI₃', 'CaCl₂', 'Mg₃N₂', 'Fe₂O₃'].includes(d)), formulas.join());
+    const grams = pickDistractors('12.0 g', pool);
+    assert.ok(grams.every(d => / g$/.test(d)), grams.join());
+  }
+});
+
+test('questions that list their own choices use them for multiple choice', () => {
+  const q = 'Barium forms Ba₃(X)₂. What forms between sodium and X?\n• NaX\n• Na₂X\n• Na₂X₂\n• Na₃X\n• Na₃X₂';
+  const listed = listedChoices(q, 'Na₃X');
+  assert.equal(listed.stem, 'Barium forms Ba₃(X)₂. What forms between sodium and X?');
+  assert.equal(listed.correct, 'Na₃X');
+  assert.equal(listed.choices.length, 5);
+  assert.equal(listedChoices('Which ion?\n• P³⁺\n• P\n• P²⁻\n• P³⁻', 'P³-').correct, 'P³⁻');
+  assert.equal(listedChoices('Same group?\n• O, S\n• C, N\n• K, Ca', 'O and S').correct, 'O, S');
+  assert.equal(listedChoices('Which reacts?\n• Fe(s) + ZnCl₂(aq) → FeCl₂(aq) + Zn(s)\n• Mn(s) + NiCl₂(aq) → MnCl₂(aq) + Ni(s)', 'Mn + NiCl₂ → MnCl₂ + Ni').correct,
+    'Mn(s) + NiCl₂(aq) → MnCl₂(aq) + Ni(s)');
+  assert.equal(listedChoices('Pick one\n• alpha\n• beta', 'gamma'), null);
+  assert.equal(listedChoices('No list here', 'x'), null);
+
+  const mc = mcChoices(q, 'Na₃X', ['bent', '1 g']);
+  assert.equal(mc.correct, 'Na₃X');
+  assert.deepEqual([...mc.options].sort(), ['NaX', 'Na₂X', 'Na₂X₂', 'Na₃X', 'Na₃X₂']);
+  assert.ok(!mc.prompt.includes('•'));
+  const plain = mcChoices('Capital of France?', 'Paris', ['Rome', 'Berlin', 'Madrid']);
+  assert.equal(plain.correct, 'Paris');
+  assert.equal(plain.options.length, 4);
 });
 
 test('templates render fields, including names with spaces', () => {

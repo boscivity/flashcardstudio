@@ -1,9 +1,9 @@
 // Deck overview: stats, study modes, options and the card list.
-import { html, render, icon, plural, fmtDue, toast, confirmDialog, downloadFile } from '../ui.js?v=2.0.1';
-import * as store from '../store.js?v=2.0.1';
-import { deckStats, cardSides, cardStatus, STATUS_LABEL, sideLabel, cardHasContent } from '../session.js?v=2.0.1';
-import { toCsv } from '../csv.js?v=2.0.1';
-import { go } from '../nav.js?v=2.0.1';
+import { html, render, icon, plural, fmtDue, toast, confirmDialog, downloadFile } from '../ui.js?v=2.0.2';
+import * as store from '../store.js?v=2.0.2';
+import { deckStats, cardSides, cardStatus, STATUS_LABEL, sideLabel, cardHasContent } from '../session.js?v=2.0.2';
+import { toCsv } from '../csv.js?v=2.0.2';
+import { go } from '../nav.js?v=2.0.2';
 
 export function deckView({ root, params }) {
   const deckId = decodeURIComponent(params[0]);
